@@ -5,3 +5,5 @@ package: Commerce (contrib)
 core_version_requirement: ^8.8 || ^9
 dependencies:
   - commerce
+  - commerce_price
+configure: entity.commerce_giftcard_type.collection

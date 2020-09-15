@@ -1,0 +1,10 @@
+commerce_giftcard.giftcard_type.*:
+  type: config_entity
+  label: 'Commerce Gift card type config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
