@@ -1,11 +1,11 @@
 commerce_giftcard.type_add:
   route_name: entity.commerce_giftcard_type.add_form
-  title: 'Add commerce gift card type'
+  title: 'Add gift card type'
   appears_on:
     - entity.commerce_giftcard_type.collection
 
 commerce_giftcard.add_page:
   route_name: entity.commerce_giftcard.add_page
-  title: 'Add commerce gift card'
+  title: 'Add gift card'
   appears_on:
     - entity.commerce_giftcard.collection

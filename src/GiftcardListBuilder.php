@@ -62,25 +62,11 @@ class GiftcardListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function render() {
-    $build['table'] = parent::render();
-
-    $total = $this->getStorage()
-      ->getQuery()
-      ->count()
-      ->execute();
-
-    $build['summary']['#markup'] = $this->t('Total commerce gift cards: @total', ['@total' => $total]);
-    return $build;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildHeader() {
-    $header['id'] = $this->t('ID');
-    $header['title'] = $this->t('Title');
+    $header['code'] = $this->t('Code');
+    $header['type'] = $this->t('Type');
     $header['status'] = $this->t('Status');
+    $header['balance'] = $this->t('Balance');
     $header['uid'] = $this->t('Author');
     $header['created'] = $this->t('Created');
     $header['changed'] = $this->t('Updated');
@@ -92,28 +78,17 @@ class GiftcardListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /* @var $entity \Drupal\commerce_giftcard\Entity\GiftcardInterface */
-    $row['id'] = $entity->id();
-    $row['title'] = $entity->toLink();
+    $row['code'] = $entity->getCode();
+    $row['type'] = $entity->get('type')->entity->label();
     $row['status'] = $entity->isEnabled() ? $this->t('Enabled') : $this->t('Disabled');
+    $row['balance']['data'] = $entity->get('balance')->view(['label' => 'hidden']);
     $row['uid']['data'] = [
       '#theme' => 'username',
       '#account' => $entity->getOwner(),
     ];
-    $row['created'] = $this->dateFormatter->format($entity->getCreatedTime());
-    $row['changed'] = $this->dateFormatter->format($entity->getChangedTime());
+    $row['created'] = $this->dateFormatter->format($entity->getCreatedTime(), 'short');
+    $row['changed'] = $this->dateFormatter->format($entity->getChangedTime(), 'short');
     return $row + parent::buildRow($entity);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
-    $destination = $this->redirectDestination->getAsArray();
-    foreach ($operations as $key => $operation) {
-      $operations[$key]['query'] = $destination;
-    }
-    return $operations;
   }
 
 }

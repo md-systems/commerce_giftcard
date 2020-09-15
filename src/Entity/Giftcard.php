@@ -25,7 +25,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   bundle_label = @Translation("Gift card type"),
  *   handlers = {
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardListBuilder",
- *     "access" = "Drupal\entity\EntityAccessControlHandler",
+ *     "access" = "Drupal\entity\UncacheableEntityAccessControlHandler",
  *     "permission_provider" = "\Drupal\entity\UncacheableEntityPermissionProvider",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
  *     "form" = {
@@ -130,7 +130,6 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
     return $this;
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -141,7 +140,6 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
 
     $fields['status'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Status'))
-      ->setDescription(t('A boolean indicating whether the commerce gift card is enabled.'))
       ->setDefaultValue(TRUE)
       ->setSettings([
         'on_label' => t('Enabled'),
@@ -152,7 +150,20 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
         'settings' => [
           'display_label' => FALSE,
         ],
-        'weight' => 0,
+        'weight' => 10,
+      ])
+      ->setDisplayConfigurable('form', TRUE);
+
+    $fields['uid']
+      ->setLabel(t('Owner'))
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'placeholder' => '',
+        ],
       ])
       ->setDisplayConfigurable('form', TRUE);
 
@@ -163,7 +174,7 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
       ->setLabel(t('Changed'));
 
     $fields['code'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Coupon code'))
+      ->setLabel(t('Code'))
       ->setRequired(TRUE)
       ->setDescription(t('The unique, machine-readable identifier for a gift card.'))
       ->addConstraint('GiftcardCode')
@@ -173,7 +184,7 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
       ->setDefaultValue('')
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-        'weight' => -4,
+        'weight' => -10,
       ])
       ->setDisplayConfigurable('form', TRUE);
 

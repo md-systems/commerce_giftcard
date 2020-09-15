@@ -17,21 +17,19 @@ class GiftcardForm extends ContentEntityForm {
 
     $entity = $this->getEntity();
     $result = $entity->save();
-    $link = $entity->toLink($this->t('View'))->toRenderable();
 
     $message_arguments = ['%label' => $this->entity->label()];
-    $logger_arguments = $message_arguments + ['link' => render($link)];
 
     if ($result == SAVED_NEW) {
       $this->messenger()->addStatus($this->t('New gift card %label has been created.', $message_arguments));
-      $this->logger('commerce_giftcard')->notice('Created new gift card %label', $logger_arguments);
+      $this->logger('commerce_giftcard')->notice('Created new gift card %label', $message_arguments);
     }
     else {
       $this->messenger()->addStatus($this->t('The gift card %label has been updated.', $message_arguments));
-      $this->logger('commerce_giftcard')->notice('Updated gift card %label.', $logger_arguments);
+      $this->logger('commerce_giftcard')->notice('Updated gift card %label.', $message_arguments);
     }
 
-    $form_state->setRedirectUrl('entity.commerce_giftcard.collection');
+    $form_state->setRedirect('entity.commerce_giftcard.collection');
   }
 
 }

@@ -41,7 +41,7 @@ class GiftcardTypeListBuilder extends ConfigEntityListBuilder {
     $build = parent::render();
 
     $build['table']['#empty'] = $this->t(
-      'No commerce gift card types available. <a href=":link">Add commerce gift card type</a>.',
+      'No gift card types available. <a href=":link">Add gift card type</a>.',
       [':link' => Url::fromRoute('entity.commerce_giftcard_type.add_form')->toString()]
     );
 

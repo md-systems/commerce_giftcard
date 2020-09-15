@@ -2,8 +2,6 @@
 
 namespace Drupal\commerce_giftcard\Entity;
 
-use Drupal\commerce\Entity\CommerceBundleEntityBase;
-use Drupal\commerce\Entity\CommerceBundleEntityInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 
 /**
@@ -20,7 +18,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *     plural = "@count gift card types",
  *   ),
  *   handlers = {
- *     "access" = "Drupal\commerce\CommerceBundleAccessControlHandler",
+ *     "access" = "Drupal\entity\BundleEntityAccessControlHandler",
  *     "form" = {
  *       "add" = "Drupal\commerce_giftcard\Form\GiftcardTypeForm",
  *       "edit" = "Drupal\commerce_giftcard\Form\GiftcardTypeForm",
@@ -35,7 +33,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *       "default" = "Drupal\entity\Menu\DefaultEntityLocalTaskProvider",
  *     },
  *   },
- *   admin_permission = "administer commerce_gift_card",
+ *   admin_permission = "administer commerce_gift_card_type",
  *   bundle_of = "commerce_giftcard",
  *   config_prefix = "giftcard_type",
  *   entity_keys = {

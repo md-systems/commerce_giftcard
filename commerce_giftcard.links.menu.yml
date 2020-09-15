@@ -1,11 +1,11 @@
 entity.commerce_giftcard.collection:
-  title: 'Commerce Gift Cards'
+  title: 'Gift Cards'
   parent: 'commerce.admin_commerce'
   description: 'Manage gift cards.'
   route_name: entity.commerce_giftcard.collection
 
 entity.commerce_giftcard_type.collection:
-  title: 'Commerce Gift Card types'
+  title: 'Gift Card types'
   parent: 'commerce.configuration'
   description: 'Manage fields, form and display settings for your gift cards.'
   route_name: entity.commerce_giftcard_type.collection
