@@ -25,7 +25,6 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   bundle_label = @Translation("Gift card type"),
  *   handlers = {
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardListBuilder",
- *     "views_data" = "Drupal\views\EntityViewsData",
  *     "access" = "Drupal\entity\EntityAccessControlHandler",
  *     "permission_provider" = "\Drupal\entity\UncacheableEntityPermissionProvider",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
