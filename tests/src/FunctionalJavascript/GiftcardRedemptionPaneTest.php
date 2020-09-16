@@ -3,6 +3,7 @@
 namespace Drupal\Tests\commerce_promotion\FunctionalJavascript;
 
 use Drupal\commerce_checkout\Entity\CheckoutFlow;
+use Drupal\commerce_giftcard\Entity\GiftcardTransactionInterface;
 use Drupal\commerce_giftcard\Entity\GiftcardType;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_order\Entity\OrderItemType;
@@ -313,9 +314,9 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
   }
 
   /**
-   * Tests checkout with a giftcard.
+   * Tests checkout partially paid by a gift card.
    */
-  public function testCheckout() {
+  public function testCheckoutPartial() {
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id()]));
 
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
@@ -336,7 +337,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$899.00');
 
-    $this->submitForm([], 'Pay and complete purchase');
+    $this->getSession()->getPage()->pressButton('Pay and complete purchase');
     $this->assertSession()->pageTextContains('Your order number is 1. You can view your order on your account page when logged in.');
 
     $order_storage = $this->container->get('entity_type.manager')->getStorage('commerce_order');
@@ -346,6 +347,15 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertEquals(new Price('899.00', 'USD'), $this->cart->getTotalPrice());
     $this->assertEquals(new Price('899.00', 'USD'), $this->cart->getTotalPaid());
     $this->assertCount(1, Payment::loadMultiple());
+
+    // Assert the updated giftcard and created transaction.
+    $this->giftcard = $this->reloadEntity($this->giftcard);
+    $this->assertEquals(new Price('0.00', 'USD'), $this->giftcard->getBalance());
+    $transactions = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadByProperties(['giftcard' => $this->giftcard->id()]);
+    $this->assertCount(1, $transactions);
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTransactionInterface $transaction */
+    $transaction = reset($transactions);
+    $this->assertEquals(new Price('-100.00', 'USD'), $transaction->getAmount());
   }
 
   /**
@@ -380,7 +390,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$999.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$0.00');
 
-    $this->submitForm([], 'Complete checkout');
+    $this->getSession()->getPage()->pressButton('Complete checkout');
     $this->assertSession()->pageTextContains('Your order number is 1. You can view your order on your account page when logged in.');
 
     $order_storage = $this->container->get('entity_type.manager')->getStorage('commerce_order');
@@ -390,6 +400,15 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertEquals(new Price('0.00', 'USD'), $this->cart->getTotalPrice());
     $this->assertEquals(new Price('0.00', 'USD'), $this->cart->getTotalPaid());
     $this->assertCount(0, Payment::loadMultiple());
+
+    // Assert the updated giftcard and created transaction.
+    $this->giftcard = $this->reloadEntity($this->giftcard);
+    $this->assertEquals(new Price('4001.00', 'USD'), $this->giftcard->getBalance());
+    $transactions = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadByProperties(['giftcard' => $this->giftcard->id()]);
+    $this->assertCount(1, $transactions);
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTransactionInterface $transaction */
+    $transaction = reset($transactions);
+    $this->assertEquals(new Price('-999.00', 'USD'), $transaction->getAmount());
   }
 
   /**

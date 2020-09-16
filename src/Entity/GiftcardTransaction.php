@@ -121,7 +121,7 @@ class GiftcardTransaction extends ContentEntityBase implements GiftcardTransacti
     parent::preSave($storage);
 
     // If this is a new transaction and there is an amount change,
-    // update the giftcard. Do not allow different
+    // update the giftcard.
     if ($this->isNew() && $this->getAmount() && !$this->getAmount()->isZero() && $this->getGiftCard()) {
       $giftcard = $this->getGiftCard();
 
