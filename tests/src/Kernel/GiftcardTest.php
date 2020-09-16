@@ -11,6 +11,8 @@ use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests basic giftcard functionality.
+ *
+ * @group commerce_giftcard
  */
 class GiftcardTest extends CommerceKernelTestBase {
 

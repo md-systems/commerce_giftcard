@@ -5,6 +5,11 @@ namespace Drupal\Tests\Functional\commerce_giftcard;
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 
+/**
+ * Test the admin UI for giftcards.
+ *
+ * @group commerce_giftcard
+ */
 class GiftcardAdminTest extends CommerceBrowserTestBase {
 
   /**

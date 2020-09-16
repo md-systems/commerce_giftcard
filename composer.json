@@ -1,0 +1,10 @@
+{
+    "name": "drupal/commerce_giftcard",
+    "type": "drupal-module",
+    "description": "Allows to use and buy gift cards.",
+    "homepage": "http://drupal.org/project/commerce_giftcard",
+    "license": "GPL-2.0+",
+    "require": {
+        "drupal/commerce": "^8.8 || ^9"
+    }
+}

@@ -1,0 +1,6 @@
+commerce_giftcard:
+  label: 'Gift card'
+  singular_label: 'gift card'
+  plural_label: 'gift cards'
+  has_ui: true
+  weight: 100

@@ -4,3 +4,37 @@
  * @file
  * Primary module hooks for Commerce Gift Card module.
  */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function commerce_giftcard_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'commerce_order') {
+    $fields['commerce_giftcards'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Giftcards'))
+      ->setDescription(t('Giftcards which have been applied to order.'))
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+      ->setRequired(FALSE)
+      ->setSetting('target_type', 'commerce_giftcard')
+      ->setSetting('handler', 'default')
+      ->setTranslatable(FALSE)
+      // @todo port validation constraint.
+      //->addConstraint('CouponValid')
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ]);
+
+    return $fields;
+  }
+}
+
