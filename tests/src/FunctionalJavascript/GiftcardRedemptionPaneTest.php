@@ -3,7 +3,6 @@
 namespace Drupal\Tests\commerce_promotion\FunctionalJavascript;
 
 use Drupal\commerce_checkout\Entity\CheckoutFlow;
-use Drupal\commerce_giftcard\Entity\GiftcardTransactionInterface;
 use Drupal\commerce_giftcard\Entity\GiftcardType;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_order\Entity\OrderItemType;

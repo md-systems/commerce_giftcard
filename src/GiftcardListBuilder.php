@@ -67,7 +67,7 @@ class GiftcardListBuilder extends EntityListBuilder {
     $header['type'] = $this->t('Type');
     $header['status'] = $this->t('Status');
     $header['balance'] = $this->t('Balance');
-    $header['uid'] = $this->t('Author');
+    $header['uid'] = $this->t('Owner');
     $header['created'] = $this->t('Created');
     $header['changed'] = $this->t('Updated');
     return $header + parent::buildHeader();
