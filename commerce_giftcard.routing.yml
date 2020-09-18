@@ -1,0 +1,9 @@
+entity.commerce_giftcard.generate_form:
+  path: '/admin/commerce/giftcards/generate'
+  defaults:
+    _form: '\Drupal\commerce_giftcard\Form\GiftcardGenerateForm'
+    _title: 'Generate giftcards'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer commerce_giftcard'

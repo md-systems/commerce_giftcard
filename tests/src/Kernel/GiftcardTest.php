@@ -21,6 +21,11 @@ class GiftcardTest extends CommerceKernelTestBase {
    */
   public static $modules = ['commerce_giftcard'];
 
+  /**
+   * @var \Drupal\commerce_giftcard\Entity\GiftcardTypeInterface
+   */
+  protected $giftcardType;
+
   protected function setUp() {
     parent::setUp();
 
@@ -30,11 +35,11 @@ class GiftcardTest extends CommerceKernelTestBase {
     $this->installEntitySchema('commerce_giftcard');
     $this->installEntitySchema('commerce_giftcard_transaction');
 
-    $giftcard_type = GiftcardType::create([
+    $this->giftcardType = GiftcardType::create([
       'id' => 'example',
       'label' => 'Example',
     ]);
-    $giftcard_type->save();
+    $this->giftcardType->save();
   }
 
   /**
@@ -60,6 +65,8 @@ class GiftcardTest extends CommerceKernelTestBase {
     $violations = $giftcard->validate();
     $this->assertEquals(0, count($violations));
     $giftcard->save();
+
+    $this->assertNull($giftcard->getOwnerId());
 
     // Create a second giftcard with the same code.
     $giftcard2 = Giftcard::create([
@@ -170,6 +177,57 @@ class GiftcardTest extends CommerceKernelTestBase {
     // @todo implement validation.
 
     $transaction1->save();
+  }
+
+  /**
+   * Ensure tha giftcards have a unique index on the code.
+   */
+  public function testUniqueIndex() {
+
+    $this->expectException(EntityStorageException::class);
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
+    $giftcard = Giftcard::create(
+      [
+        'type' => 'example',
+        'code' => 'ABC',
+        'balance' => new Price(50, 'USD'),
+      ]
+    );
+    $giftcard->save();
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
+    $giftcard = Giftcard::create(
+      [
+        'type' => 'example',
+        'code' => 'ABC',
+        'balance' => new Price(50, 'USD'),
+      ]
+    );
+    $giftcard->save();
+  }
+
+  /**
+   * Tests creating giftcard transactions.
+   */
+  public function testGenerate() {
+    $this->assertEquals(8, $this->giftcardType->getGenerateSetting('length'));
+
+    /** @var \Drupal\commerce_giftcard\GiftcardCodeGenerator $code_generator */
+    $code_generator = \Drupal::service('commerce_giftcard.code_generator');
+
+    $codes = $code_generator->generateCodes($this->giftcardType, 10);
+    $this->assertCount(10, $codes);
+    foreach ($codes as $code) {
+      $this->assertRegExp('/[0-9a-zA-Z]{8}/', $code);
+    }
+
+    $this->giftcardType->setGenerateSetting('length', 4);
+
+    $codes = $code_generator->generateCodes($this->giftcardType, 5);
+    $this->assertCount(5, $codes);
+    foreach ($codes as $code) {
+      $this->assertRegExp('/[0-9a-zA-Z]{4}$/', $code);
+    }
   }
 
 }

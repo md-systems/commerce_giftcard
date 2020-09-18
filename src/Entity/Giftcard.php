@@ -26,6 +26,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   handlers = {
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardListBuilder",
  *     "access" = "Drupal\entity\UncacheableEntityAccessControlHandler",
+ *     "storage_schema" = "Drupal\commerce_giftcard\GiftcardStorageSchema",
  *     "permission_provider" = "\Drupal\entity\UncacheableEntityPermissionProvider",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
  *     "form" = {
@@ -43,7 +44,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     },
  *   },
  *   base_table = "commerce_giftcard",
- *   admin_permission = "administer commerce_gift_card",
+ *   admin_permission = "administer commerce_giftcard",
  *   entity_keys = {
  *     "id" = "id",
  *     "bundle" = "type",
@@ -165,7 +166,9 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
           'placeholder' => '',
         ],
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      // Giftcards do not automatically belong to the current user.
+      ->setDefaultValueCallback(NULL);
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created on'));

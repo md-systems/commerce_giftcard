@@ -2,8 +2,12 @@
 
 namespace Drupal\Tests\Functional\commerce_giftcard;
 
+use Drupal\commerce_giftcard\Entity\Giftcard;
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
+use Drupal\commerce_giftcard\Entity\GiftcardType;
+use Drupal\commerce_price\Price;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
+use Drupal\Tests\UiHelperTrait;
 
 /**
  * Test the admin UI for giftcards.
@@ -11,6 +15,8 @@ use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
  * @group commerce_giftcard
  */
 class GiftcardAdminTest extends CommerceBrowserTestBase {
+
+  use UiHelperTrait;
 
   /**
    * {@inheritdoc}
@@ -22,8 +28,8 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
    */
   protected function getAdministratorPermissions() {
     return array_merge(parent::getAdministratorPermissions(), [
-      'administer commerce_gift_card',
-      'administer commerce_gift_card_type',
+      'administer commerce_giftcard',
+      'administer commerce_giftcard_type',
     ]);
   }
 
@@ -66,6 +72,40 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     $this->drupalLogout();
     $this->drupalGet('admin/commerce/giftcards');
     $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Tests generating giftcards.
+   */
+  public function testGenerateGiftcard() {
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTypeInterface $giftcard_type */
+    $giftcard_type = GiftcardType::create([
+      'id' => 'example',
+      'label' => 'Example',
+    ]);
+    $giftcard_type->setGenerateSetting('length', 9);
+    $giftcard_type->save();
+
+    $this->drupalGet('admin/commerce/giftcards');
+    $this->clickLink('Generate gift cards');
+
+    $page = $this->getSession()->getPage();
+    $page->selectFieldOption('Gift card type', 'example');
+    $page->fillField('Initial balance', '50.25');
+    $page->fillField('Number of gift cards', '32');
+    $page->pressButton('Generate');
+    $this->checkForMetaRefresh();
+    $this->assertSession()->pageTextContains('Generated 32 gift cards.');
+
+    $giftcards = Giftcard::loadMultiple();
+    $this->assertCount(32, $giftcards);
+    foreach ($giftcards as $giftcard) {
+      $this->assertEquals('example', $giftcard->bundle());
+      $this->assertEquals(new Price(50.25, 'USD'), $giftcard->getBalance());
+      $this->assertRegExp('/^[0-9a-zA-Z]{9}$/', $giftcard->getCode());
+      $this->assertNull($giftcard->getOwnerId());
+    }
   }
 
 }

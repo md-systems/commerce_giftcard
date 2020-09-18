@@ -29,7 +29,6 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
  *   },
  *   base_table = "commerce_giftcard_transaction",
- *   admin_permission = "administer commerce_gift_card",
  *   entity_keys = {
  *     "id" = "id",
  *     "uuid" = "uuid",

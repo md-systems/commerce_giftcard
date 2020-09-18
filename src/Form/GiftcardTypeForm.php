@@ -48,6 +48,19 @@ class GiftcardTypeForm extends BundleEntityFormBase {
       '#description' => $this->t('A unique machine-readable name for this gift card type. It must only contain lowercase letters, numbers, and underscores.'),
     ];
 
+    $form['generate'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Code pattern'),
+      '#tree' => TRUE,
+    ];
+    $form['generate']['length'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Length'),
+      '#required' => TRUE,
+      '#default_value' => $this->entity->getGenerateSetting('length'),
+      '#min' => 1,
+    ];
+
     return $this->protectBundleIdElement($form);
   }
 
@@ -55,14 +68,14 @@ class GiftcardTypeForm extends BundleEntityFormBase {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity_type = $this->entity;
+    $entity = $this->entity;
 
-    $entity_type->set('id', trim($entity_type->id()));
-    $entity_type->set('label', trim($entity_type->label()));
+    $entity->set('id', trim($entity->id()));
+    $entity->set('label', trim($entity->label()));
 
-    $status = $entity_type->save();
+    $status = $entity->save();
 
-    $t_args = ['%name' => $entity_type->label()];
+    $t_args = ['%name' => $entity->label()];
     if ($status == SAVED_UPDATED) {
       $message = $this->t('The gift card type %name has been updated.', $t_args);
     }
@@ -71,7 +84,7 @@ class GiftcardTypeForm extends BundleEntityFormBase {
     }
     $this->messenger()->addStatus($message);
 
-    $form_state->setRedirectUrl($entity_type->toUrl('collection'));
+    $form_state->setRedirectUrl($entity->toUrl('collection'));
   }
 
 }

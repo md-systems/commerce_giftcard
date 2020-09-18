@@ -82,10 +82,10 @@ class GiftcardListBuilder extends EntityListBuilder {
     $row['type'] = $entity->get('type')->entity->label();
     $row['status'] = $entity->isEnabled() ? $this->t('Enabled') : $this->t('Disabled');
     $row['balance']['data'] = $entity->get('balance')->view(['label' => 'hidden']);
-    $row['uid']['data'] = [
+    $row['uid']['data'] = $entity->getOwnerId() ? [
       '#theme' => 'username',
       '#account' => $entity->getOwner(),
-    ];
+    ] : '';
     $row['created'] = $this->dateFormatter->format($entity->getCreatedTime(), 'short');
     $row['changed'] = $this->dateFormatter->format($entity->getChangedTime(), 'short');
     return $row + parent::buildRow($entity);

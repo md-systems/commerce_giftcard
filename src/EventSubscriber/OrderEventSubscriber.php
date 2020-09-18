@@ -3,6 +3,7 @@
 namespace Drupal\commerce_giftcard\EventSubscriber;
 
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
+use Drupal\commerce_giftcard\GiftcardCodeGenerator;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -21,13 +22,21 @@ class OrderEventSubscriber implements EventSubscriberInterface {
   protected $entityTypeManager;
 
   /**
+   * The gift card code generator.
+   *
+   * @var \Drupal\commerce_giftcard\GiftcardCodeGenerator
+   */
+  protected $codeGenerator;
+
+  /**
    * OrderEventSubscriber constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *  The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, GiftcardCodeGenerator $code_generator) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->codeGenerator = $code_generator;
   }
 
   /**
@@ -92,13 +101,14 @@ class OrderEventSubscriber implements EventSubscriberInterface {
       $purchased_entity = $item->getPurchasedEntity();
       if ($purchased_entity && $purchased_entity->hasField('commerce_giftcard_amount') && $purchased_entity->hasField('commerce_giftcard_type') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
 
+        $codes = $this->codeGenerator->generateCodes($purchased_entity->get('commerce_giftcard_type')->entity, $item->getQuantity());
+
         for ($i = 0; $i < $item->getQuantity(); $i++) {
           // @todo Add a connection between order/line item/variation and
           //   created giftcard to be able to disable if the order is canceled.
           $giftcard = $this->entityTypeManager->getStorage('commerce_giftcard')->create([
             'type' => $purchased_entity->get('commerce_giftcard_type')->target_id,
-            // @todo: Make this configurable. Settings on the coupon type?
-            'code' => \user_password(),
+            'code' => $codes[$i],
             'balance' => $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice(),
             'uid' => $order->getCustomerId(),
           ]);

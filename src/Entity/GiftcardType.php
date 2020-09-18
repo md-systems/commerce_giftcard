@@ -33,7 +33,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *       "default" = "Drupal\entity\Menu\DefaultEntityLocalTaskProvider",
  *     },
  *   },
- *   admin_permission = "administer commerce_gift_card_type",
+ *   admin_permission = "administer commerce_giftcard_type",
  *   bundle_of = "commerce_giftcard",
  *   config_prefix = "giftcard_type",
  *   entity_keys = {
@@ -51,6 +51,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *     "id",
  *     "label",
  *     "uuid",
+ *     "generate",
  *   }
  * )
  */
@@ -69,5 +70,45 @@ class GiftcardType extends ConfigEntityBundleBase implements GiftcardTypeInterfa
    * @var string
    */
   protected $label;
+
+  /**
+   * Generate code settings.
+   *
+   * @var array
+   */
+  protected $generate = [];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values, $entity_type) {
+    parent::__construct($values, $entity_type);
+
+    // Set default generate settings.
+    $this->generate += [
+      'length' => 8,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGenerateSettings() {
+    return $this->generate;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGenerateSetting($name) {
+    return $this->generate[$name] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setGenerateSetting($name, $value) {
+    $this->generate[$name] = $value;
+  }
 
 }

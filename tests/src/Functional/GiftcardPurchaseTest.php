@@ -3,7 +3,6 @@
 namespace Drupal\Tests\Functional\commerce_giftcard;
 
 use Drupal\commerce_giftcard\Entity\Giftcard;
-use Drupal\commerce_giftcard\Entity\GiftcardInterface;
 use Drupal\commerce_giftcard\Entity\GiftcardType;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariationType;
@@ -51,10 +50,12 @@ class GiftcardPurchaseTest extends CommerceBrowserTestBase {
     $trait = $trait_manager->createInstance($trait_id);
     $trait_manager->installTrait($trait, 'commerce_product_variation', $variation_type->id());
 
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTypeInterface $giftcard_type */
     $giftcard_type = GiftcardType::create([
       'id' => 'example',
       'label' => 'Example',
     ]);
+    $giftcard_type->setGenerateSetting('length', 12);
     $giftcard_type->save();
 
     $variation = $this->createEntity('commerce_product_variation', [
@@ -110,7 +111,8 @@ class GiftcardPurchaseTest extends CommerceBrowserTestBase {
     foreach ($giftcards as $giftcard) {
       $this->assertEquals('example', $giftcard->bundle());
       $this->assertEquals(new Price(19.99, 'USD'), $giftcard->getBalance());
-      $this->assertRegExp('/[0-9a-zA-Z]{8}/', $giftcard->getCode());
+      $this->assertRegExp('/^[0-9a-zA-Z]{12}$/', $giftcard->getCode());
+      $this->assertEquals(\Drupal::currentUser()->id(), $giftcard->getOwnerId());
     }
   }
 
