@@ -2,30 +2,13 @@
 
 namespace Drupal\commerce_giftcard;
 
-use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
 /**
- * The giftcard storage schema.
+ * The giftcard transaction storage schema.
  */
-class GiftcardStorageSchema extends SqlContentEntityStorageSchema {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE) {
-    $schema = parent::getEntitySchema($entity_type, $reset);
-
-    if ($base_table = $this->storage->getBaseTable()) {
-      // Add a unique key on the code.
-      $schema[$base_table]['unique keys'] += [
-        'code' => ['code'],
-      ];
-    }
-
-    return $schema;
-  }
+class GiftcardTransactionStorageSchema extends SqlContentEntityStorageSchema {
 
   /**
    * {@inheritdoc}

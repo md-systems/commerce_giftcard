@@ -3,7 +3,6 @@
 namespace Drupal\commerce_giftcard\Entity;
 
 use Drupal\commerce_price\Price;
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\Core\Entity\EntityChangedInterface;

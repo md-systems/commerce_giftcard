@@ -34,9 +34,9 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
   }
 
   /**
-   * Tests creating a giftcard in the UI.
+   * Tests creating a giftcard with a transaction in the UI.
    */
-  public function testCreateGiftcard() {
+  public function testCreateGiftcardAndTransaction() {
 
     $giftcard_user = $this->createUser();
 
@@ -68,6 +68,30 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
     $giftcard = array_shift($entity_list);
     $this->assertInstanceOf(GiftcardInterface::class, $giftcard);
+
+    // Add a transaction.
+    $this->clickLink('Add transaction');
+    $page->fillField('Amount', '-12.75');
+    $page->pressButton('Save');
+    $this->saveHtmlOutput();
+    $this->assertSession()->pageTextContains('-$12.75 transaction for giftcard ' . $giftcard->getCode() .  ' has been created, new balance: $37.50.');
+
+    // Click on the 1 transaction link.
+    $this->clickLink('1');
+    $this->saveHtmlOutput();
+    $this->assertSession()->pageTextContains('ABC');
+    $this->assertSession()->pageTextContains('-$12.75');
+
+    // Try to add a transaction with an invalid balance.
+    $this->drupalGet('admin/commerce/giftcards');
+    $this->clickLink('Add transaction');
+    $page->fillField('Amount', '-37.51');
+    $page->pressButton('Save');
+    $this->saveHtmlOutput();
+    $this->assertSession()->pageTextContains('The transaction amount must not result in a negative giftcard balance.');
+
+    $entity_list = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadMultiple();
+    $this->assertCount(1, $entity_list);
 
     $this->drupalLogout();
     $this->drupalGet('admin/commerce/giftcards');

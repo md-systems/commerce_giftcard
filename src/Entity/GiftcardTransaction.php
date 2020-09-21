@@ -25,14 +25,25 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   ),
  *   handlers = {
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardTransactionListBuilder",
- *     "access" = "Drupal\entity\EntityAccessControlHandler",
+ *     "access" = "Drupal\Core\Entity\EntityAccessControlHandler",
+ *     "storage_schema" = "Drupal\commerce_giftcard\GiftcardTransactionStorageSchema",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
+ *     "form" = {
+ *       "add" = "Drupal\commerce_giftcard\Form\GiftcardTransactionForm",
+ *     },
+ *     "route_provider" = {
+ *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *     },
  *   },
+ *   admin_permission = "administer commerce_giftcard",
  *   base_table = "commerce_giftcard_transaction",
  *   entity_keys = {
  *     "id" = "id",
  *     "uuid" = "uuid",
  *     "owner" = "uid"
+ *   },
+ *   links = {
+ *     "add-form" = "/admin/commerce/giftcards/add-transaction",
  *   },
  * )
  */
@@ -95,6 +106,21 @@ class GiftcardTransaction extends ContentEntityBase implements GiftcardTransacti
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
 
+    $fields['uid']
+      ->setLabel(t('Owner'))
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      // Giftcard transactions do not automatically belong to the current user.
+      ->setDefaultValueCallback(NULL);
+
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created on'));
 
@@ -104,11 +130,27 @@ class GiftcardTransaction extends ContentEntityBase implements GiftcardTransacti
     $fields['giftcard'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Giftcard'))
       ->setRequired(TRUE)
-      ->setSetting('target_type', 'commerce_giftcard');
+      ->setSetting('target_type', 'commerce_giftcard')
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => -10,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['amount'] = BaseFieldDefinition::create('commerce_price')
-      ->setLabel(t('Transaction Amount'))
-      ->setRequired(TRUE);
+      ->setLabel(t('Amount'))
+      ->addConstraint('GiftcardTransactionValidAmount')
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'commerce_price_default',
+        'weight' => 0,
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     return $fields;
   }

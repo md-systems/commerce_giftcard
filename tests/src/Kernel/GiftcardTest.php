@@ -150,7 +150,10 @@ class GiftcardTest extends CommerceKernelTestBase {
       'giftcard' => $giftcard,
       'amount' => new Price(-60, 'USD')
     ]);
-    // @todo implement validation.
+    $violations = $transaction1->validate();
+    $this->assertEquals(1, count($violations));
+    $this->assertEquals('amount.0.number', $violations[0]->getPropertyPath());
+    $this->assertEquals('The transaction amount must not result in a negative giftcard balance.', $violations[0]->getMessage());
 
     $transaction1->save();
   }
@@ -174,7 +177,10 @@ class GiftcardTest extends CommerceKernelTestBase {
       'giftcard' => $giftcard,
       'amount' => new Price(-50, 'CHF')
     ]);
-    // @todo implement validation.
+    $violations = $transaction1->validate();
+    $this->assertEquals(1, count($violations));
+    $this->assertEquals('amount.0.currency_code', $violations[0]->getPropertyPath());
+    $this->assertEquals('The transaction amount currency (<em class="placeholder">CHF</em>) does not match the giftcard currency (<em class="placeholder">USD</em>).', $violations[0]->getMessage());
 
     $transaction1->save();
   }
