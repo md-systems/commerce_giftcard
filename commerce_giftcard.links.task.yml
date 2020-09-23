@@ -1,0 +1,5 @@
+commerce_giftcard.refund_form:
+  route_name: commerce_giftcard.refund_form
+  title: 'Refund gift card'
+  base_route: entity.commerce_order.canonical
+  weight: 50

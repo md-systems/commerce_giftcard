@@ -21,7 +21,7 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['commerce_giftcard'];
+  public static $modules = ['commerce_giftcard', 'commerce_order', 'commerce_product'];
 
   /**
    * {@inheritdoc}
@@ -30,6 +30,9 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     return array_merge(parent::getAdministratorPermissions(), [
       'administer commerce_giftcard',
       'administer commerce_giftcard_type',
+      'administer commerce_order',
+      'administer commerce_order_type',
+      'access commerce_order overview',
     ]);
   }
 
@@ -130,6 +133,124 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
       $this->assertRegExp('/^[0-9a-zA-Z]{9}$/', $giftcard->getCode());
       $this->assertNull($giftcard->getOwnerId());
     }
+  }
+
+  /**
+   * Tests gift card refunds.
+   */
+  public function testRefund() {
+    // Create an order with an item.
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $this->createEntity('commerce_order', [
+      'type' => 'default',
+      'store_id' => $this->store->id(),
+      'mail' => $this->loggedInUser->getEmail(),
+      'state' => 'draft',
+      'uid' => $this->loggedInUser,
+    ]);
+
+    $order_item = $this->createEntity('commerce_order_item', [
+      'type' => 'default',
+      'unit_price' => [
+        'number' => '999',
+        'currency_code' => 'USD',
+      ],
+    ]);
+    $order->setItems([$order_item]);
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTypeInterface $giftcard_type */
+    $giftcard_type = GiftcardType::create([
+      'id' => 'example',
+      'label' => 'Example',
+    ]);
+    $giftcard_type->save();
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
+    $giftcard = Giftcard::create([
+      'type' => 'example',
+      'code' => 'ABC',
+      'balance' => new Price(800, 'USD'),
+    ]);
+    $giftcard->save();
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
+    $giftcard2 = Giftcard::create([
+      'type' => 'example',
+      'code' => 'DEF',
+      'balance' => new Price(300, 'USD'),
+    ]);
+    $giftcard2->save();
+
+    $order->set('commerce_giftcards', [$giftcard, $giftcard2]);
+    $order->save();
+
+    // Refund is only visible after placing the order.
+    $this->drupalGet($order->toUrl()->toString());
+    $this->assertSession()->pageTextNotContains('Refund gift card');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(2) .order-total-line-value', '-$800.00');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-value', '-$199.00');
+    $this->assertSession()->elementContains('css', '.order-total-line__total .order-total-line-value', '$0.00');
+
+    // Balance is still on the giftcard.
+    $giftcard = $this->reloadEntity($giftcard);
+    $this->assertEquals(new Price('800.00', 'USD'), $giftcard->getBalance());
+
+    $page = $this->getSession()->getPage();
+    $page->pressButton('Place order');
+    $this->assertSession()->pageTextContains('Refund gift card');
+
+    $giftcard = $this->reloadEntity($giftcard);
+    $this->assertEquals(new Price('0.00', 'USD'), $giftcard->getBalance());
+
+    $this->clickLink('Refund gift card');
+    $this->assertSession()->optionExists('Gift card', 'ABC ($800.00)');
+    $this->assertSession()->optionExists('Gift card', 'DEF ($199.00)');
+
+    // Validate max refund amount.
+    $page->fillField('Refund amount', 801);
+    $page->pressButton('Refund');
+    $this->assertSession()->pageTextContains('Amount must not be larger than remaining adjustment amount ($800.00)');
+
+    $page->fillField('Refund amount', 200);
+    $page->selectFieldOption('Gift card', $giftcard2->id());
+    $page->pressButton('Refund');
+    $this->assertSession()->pageTextContains('Amount must not be larger than remaining adjustment amount ($199.00)');
+
+    // Refund a partial amount of giftcard DEF, the adjustment is still there
+    // but updated.
+    $page->fillField('Refund amount', 198);
+    $page->pressButton('Refund');
+    $this->assertSession()->pageTextContains('Refunded $198.00 for giftcard DEF');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(2) .order-total-line-value', '-$800.00');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-value', '-$1.00');
+    $this->assertSession()->elementContains('css', '.order-total-line__total .order-total-line-value', '$198.00');
+
+    // Assert the giftcard balance and transactions.
+    $giftcard2 = $this->reloadEntity($giftcard2);
+    $this->assertEquals(new Price('299.00', 'USD'), $giftcard2->getBalance());
+
+    $transactions = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadByProperties(['giftcard' => $giftcard2->id()]);
+    ksort($transactions);
+    $this->assertCount(2, $transactions);
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTransactionInterface $transaction */
+    $transaction = \array_shift($transactions);
+    $this->assertEquals(new Price('-199.00', 'USD'), $transaction->getAmount());
+    $transaction = \array_shift($transactions);
+    $this->assertEquals(new Price('198.00', 'USD'), $transaction->getAmount());
+
+    // Refund the full amount of giftcard ABC, only one adjustment should
+    // remain.
+    $this->clickLink('Refund gift card');
+    $page->fillField('Refund amount', 800);
+    $page->pressButton('Refund');
+    $this->assertSession()->pageTextContains('Refunded $800.00 for giftcard ABC');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$1.00');
+    $this->assertSession()->elementContains('css', '.order-total-line__total .order-total-line-value', '$998.00');
+
+    $giftcard = $this->reloadEntity($giftcard);
+    $this->assertEquals(new Price('800.00', 'USD'), $giftcard->getBalance());
+
+    $this->saveHtmlOutput();
   }
 
 }

@@ -12,3 +12,6 @@ services:
     arguments: [ '@entity_type.manager', '@commerce_giftcard.code_generator']
     tags:
       - { name: event_subscriber }
+  commerce_giftcard.order_manager:
+    class: Drupal\commerce_giftcard\GiftcardOrderManager
+    arguments: ['@entity_type.manager']

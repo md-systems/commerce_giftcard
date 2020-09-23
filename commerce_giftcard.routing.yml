@@ -17,3 +17,16 @@ entity.commerce_giftcard_transaction.giftcard_collection:
         type: 'entity:commerce_giftcard'
   requirements:
     _entity_access: 'commerce_giftcard.view'
+
+commerce_giftcard.refund_form:
+  path: '/admin/commerce/orders/{commerce_order}/giftcard-refund'
+  defaults:
+    _form: '\Drupal\commerce_giftcard\Form\GiftcardOrderRefundForm'
+    _title: 'Refund gift card'
+  requirements:
+    _permission: 'administer commerce_giftcard'
+    _custom_access: '\Drupal\commerce_giftcard\Access\GiftcardOrderRefundAccess::checkAccess'
+  options:
+    parameters:
+      commerce_order:
+        type: 'entity:commerce_order'
