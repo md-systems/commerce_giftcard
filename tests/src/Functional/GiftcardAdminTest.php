@@ -8,6 +8,7 @@ use Drupal\commerce_giftcard\Entity\GiftcardType;
 use Drupal\commerce_price\Price;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\Tests\UiHelperTrait;
+use Drupal\user\Entity\Role;
 
 /**
  * Test the admin UI for giftcards.
@@ -251,6 +252,81 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     $this->assertEquals(new Price('800.00', 'USD'), $giftcard->getBalance());
 
     $this->saveHtmlOutput();
+  }
+
+  /**
+   * Verifies giftcard management without admin permissions.
+   */
+  public function testLimitedAccess() {
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardTypeInterface $giftcard_type */
+    $giftcard_type = GiftcardType::create([
+      'id' => 'example',
+      'label' => 'Example',
+    ]);
+    $giftcard_type->save();
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
+    $giftcard = Giftcard::create([
+      'type' => 'example',
+      'code' => 'ABC',
+      'balance' => new Price(100, 'USD'),
+    ]);
+    $giftcard->save();
+
+    $limited_access_user = $this->drupalCreateUser(['access giftcard overview']);
+    $this->drupalLogin($limited_access_user);
+
+    $this->drupalGet('admin/commerce/giftcards');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Giftcard is visible but no links to edit, delete, create or add a
+    // transaction are.
+    $this->assertSession()->pageTextContains('ABC');
+    $this->assertSession()->pageTextContains('$100.00');
+    $this->assertSession()->pageTextNotContains('Add gift card');
+    $this->assertSession()->pageTextNotContains('Add transaction');
+    $this->assertSession()->pageTextNotContains('Edit');
+    $this->assertSession()->pageTextNotContains('Delete');
+
+    $roles = $limited_access_user->getRoles(TRUE);
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = Role::load(reset($roles));
+    $role->grantPermission('create giftcard');
+    $role->save();
+
+    $this->drupalGet('admin/commerce/giftcards');
+    $this->assertSession()->pageTextContains('Add gift card');
+    $this->assertSession()->pageTextNotContains('Add transaction');
+    $this->assertSession()->pageTextNotContains('Edit');
+    $this->assertSession()->pageTextNotContains('Delete');
+
+    $role->grantPermission('create giftcard transaction');
+    $role->save();
+    $this->drupalGet('admin/commerce/giftcards');
+    $this->assertSession()->pageTextContains('Add gift card');
+    $this->assertSession()->pageTextContains('Add transaction');
+    $this->assertSession()->pageTextNotContains('Edit');
+    $this->assertSession()->pageTextNotContains('Delete');
+
+    $this->clickLink('Add transaction');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->fieldValueEquals('Gift card', 'ABC (' . $giftcard->id() . ')');
+
+    $page = $this->getSession()->getPage();
+    $page->fillField('Amount', '-12.75');
+    $page->pressButton('Save');
+    $this->saveHtmlOutput();
+    $this->assertSession()->pageTextContains('-$12.75 transaction for giftcard ' . $giftcard->getCode() .  ' has been created, new balance: $87.25.');
+
+    $this->clickLink('Add gift card');
+
+    $page->fillField('Code', 'DEF');
+    $page->fillField('Balance', '50.25');
+    $page->pressButton('Save');
+    $this->assertSession()->pageTextContains('New gift card DEF has been created.');
+
+    // View transactions.
+    $this->clickLink('1');
   }
 
 }

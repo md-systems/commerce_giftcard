@@ -130,7 +130,7 @@ class GiftcardListBuilder extends EntityListBuilder {
    */
   protected function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
-    if ($entity->access('update')) {
+    if ($this->entityTypeManager->getAccessControlHandler('commerce_giftcard_transaction')->createAccess()) {
       $operations['add_transaction'] = [
         'title' => $this->t('Add transaction'),
         'weight' => 0,

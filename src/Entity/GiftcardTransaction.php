@@ -25,7 +25,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   ),
  *   handlers = {
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardTransactionListBuilder",
- *     "access" = "Drupal\Core\Entity\EntityAccessControlHandler",
+ *     "access" = "Drupal\commerce_giftcard\GiftcardTransactionAccessControlHandler",
  *     "storage_schema" = "Drupal\commerce_giftcard\GiftcardTransactionStorageSchema",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
  *     "form" = {
@@ -128,7 +128,7 @@ class GiftcardTransaction extends ContentEntityBase implements GiftcardTransacti
       ->setLabel(t('Changed'));
 
     $fields['giftcard'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Giftcard'))
+      ->setLabel(t('Gift card'))
       ->setRequired(TRUE)
       ->setSetting('target_type', 'commerce_giftcard')
       ->setDisplayOptions('form', [

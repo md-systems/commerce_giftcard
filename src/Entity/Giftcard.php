@@ -25,18 +25,17 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   bundle_label = @Translation("Gift card type"),
  *   handlers = {
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardListBuilder",
- *     "access" = "Drupal\entity\UncacheableEntityAccessControlHandler",
+ *     "access" = "Drupal\commerce_giftcard\GiftcardAccessControlHandler",
  *     "storage_schema" = "Drupal\commerce_giftcard\GiftcardStorageSchema",
- *     "permission_provider" = "\Drupal\entity\UncacheableEntityPermissionProvider",
  *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
  *     "form" = {
  *       "add" = "Drupal\commerce_giftcard\Form\GiftcardForm",
  *       "edit" = "Drupal\commerce_giftcard\Form\GiftcardForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
- *       "delete-multiple-confirm" = "Drupal\node\Form\DeleteMultiple"
+ *       "delete-multiple-confirm" = "\Drupal\Core\Entity\Form\DeleteMultipleForm"
  *     },
  *     "route_provider" = {
- *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *       "html" = "\Drupal\commerce_giftcard\GiftcardRouteProvider",
  *       "delete-multiple" = "Drupal\entity\Routing\DeleteMultipleRouteProvider",
  *     },
  *     "local_task_provider" = {

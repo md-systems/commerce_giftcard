@@ -1,2 +1,12 @@
 administer commerce_giftcard_type:
   title: Administer Commerce gift card types
+administer commerce_giftcard:
+  title: Administer Commerce gift cards
+access giftcard overview:
+  title: Access gift card overview
+view own giftcards:
+  title: View own gift cards
+create giftcard:
+  title: Create giftcard transactions
+create giftcard transaction:
+  title: Create giftcard transactions
