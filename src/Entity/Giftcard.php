@@ -27,7 +27,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardListBuilder",
  *     "access" = "Drupal\commerce_giftcard\GiftcardAccessControlHandler",
  *     "storage_schema" = "Drupal\commerce_giftcard\GiftcardStorageSchema",
- *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
+ *     "views_data" = "Drupal\commerce_giftcard\GiftcardViewsData",
  *     "form" = {
  *       "add" = "Drupal\commerce_giftcard\Form\GiftcardForm",
  *       "edit" = "Drupal\commerce_giftcard\Form\GiftcardForm",

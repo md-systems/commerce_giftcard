@@ -32,7 +32,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *       "add" = "Drupal\commerce_giftcard\Form\GiftcardTransactionForm",
  *     },
  *     "route_provider" = {
- *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *       "html" = "\Drupal\commerce_giftcard\GiftcardRouteProvider",
  *     },
  *   },
  *   admin_permission = "administer commerce_giftcard",
@@ -44,6 +44,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   },
  *   links = {
  *     "add-form" = "/admin/commerce/giftcards/add-transaction",
+ *     "collection" = "/admin/commerce/giftcards/transactions",
  *   },
  * )
  */

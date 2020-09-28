@@ -10,6 +10,13 @@ commerce_giftcard.add_page:
   appears_on:
     - entity.commerce_giftcard.collection
 
+commerce_giftcard.transaction_add:
+  route_name: entity.commerce_giftcard_transaction.add_form
+  title: 'Add transaction'
+  appears_on:
+    - entity.commerce_giftcard_transaction.collection
+
+
 entity.commerce_giftcard.generate_form:
   route_name: entity.commerce_giftcard.generate_form
   title: 'Generate gift cards'

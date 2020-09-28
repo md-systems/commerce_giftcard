@@ -34,6 +34,7 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
       'administer commerce_order',
       'administer commerce_order_type',
       'access commerce_order overview',
+      'access giftcard overview',
     ]);
   }
 
@@ -45,7 +46,7 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     $giftcard_user = $this->createUser();
 
     $this->drupalGet('admin/commerce/giftcards');
-    $this->assertSession()->pageTextContains('There are no Gift cards yet.');
+    $this->assertSession()->pageTextContains('There are no gift cards yet.');
 
     $this->clickLink('Add gift card');
     $this->assertSession()->pageTextContains('There is no gift card type yet.');
