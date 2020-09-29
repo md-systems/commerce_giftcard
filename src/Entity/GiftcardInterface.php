@@ -3,6 +3,7 @@
 namespace Drupal\commerce_giftcard\Entity;
 
 use Drupal\commerce_price\Price;
+use Drupal\commerce_store\Entity\EntityStoresInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
@@ -10,7 +11,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 /**
  * Provides an interface defining a commerce gift card entity type.
  */
-interface GiftcardInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface {
+interface GiftcardInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface, EntityStoresInterface {
 
   /**
    * Gets the gift card code.

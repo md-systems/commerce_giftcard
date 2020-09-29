@@ -4,6 +4,7 @@ namespace Drupal\Tests\Functional\commerce_giftcard;
 
 use Drupal\commerce_giftcard\Entity\Giftcard;
 use Drupal\commerce_giftcard\Entity\GiftcardType;
+use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
@@ -75,7 +76,7 @@ class GiftcardPurchaseTest extends CommerceBrowserTestBase {
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $this->product = $this->createEntity('commerce_product', [
       'type' => 'default',
-      'title' => 'Giftcard',
+      'title' => 'Giftcard 19.99',
       'variations' => [$variation],
       'stores' => [$this->store],
     ]);
@@ -106,6 +107,12 @@ class GiftcardPurchaseTest extends CommerceBrowserTestBase {
     $this->submitForm([], 'Complete checkout');
     $this->assertSession()->pageTextContains('Your order number is 1. You can view your order on your account page when logged in.');
 
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = Order::load(1);
+    $items = $order->getItems();
+    $item = reset($items);
+
+    /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface[] $giftcards */
     $giftcards = Giftcard::loadMultiple();
     $this->assertCount(5, $giftcards);
     foreach ($giftcards as $giftcard) {
@@ -113,6 +120,15 @@ class GiftcardPurchaseTest extends CommerceBrowserTestBase {
       $this->assertEquals(new Price(19.99, 'USD'), $giftcard->getBalance());
       $this->assertRegExp('/^[0-9a-zA-Z]{12}$/', $giftcard->getCode());
       $this->assertEquals(\Drupal::currentUser()->id(), $giftcard->getOwnerId());
+      $this->assertEquals([$order->getStoreId()], $giftcard->getStoreIds());
+
+      $transactions = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadByProperties(['giftcard' => $giftcard->id()]);
+      $this->assertCount(1, $transactions);
+      /** @var \Drupal\commerce_giftcard\Entity\GiftcardTransactionInterface $transaction */
+      $transaction = reset($transactions);
+      $this->assertEquals(new Price(19.99, 'USD'), $transaction->getAmount());
+      $this->assertEquals($item->id(), $transaction->getReferencedEntity()->id());
+      $this->assertEquals('Bought Giftcard 19.99.', $transaction->getComment());
     }
   }
 

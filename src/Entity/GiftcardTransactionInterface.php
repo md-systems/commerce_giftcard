@@ -4,6 +4,7 @@ namespace Drupal\commerce_giftcard\Entity;
 
 use Drupal\commerce_price\Price;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 
@@ -63,5 +64,21 @@ interface GiftcardTransactionInterface extends ContentEntityInterface, EntityOwn
    * @return $this
    */
   public function setCreatedTime($timestamp);
+
+  /**
+   * Returns the translated message.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|null
+   *   The message if any, or NULL.
+   */
+  public function getComment();
+
+  /**
+   * Returns the referenced entity of this transaction, if any.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   The referenced entity or NULL.
+   */
+  public function getReferencedEntity();
 
 }

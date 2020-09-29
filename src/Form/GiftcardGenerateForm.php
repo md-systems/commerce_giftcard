@@ -58,6 +58,14 @@ class GiftcardGenerateForm extends FormBase {
       '#step' => 1,
     ];
 
+    $form['stores'] = [
+      '#type' => 'commerce_entity_select',
+      '#title' => $this->t('Stores'),
+      '#description' => $this->t('Limit the gift card to the selected stores.'),
+      '#target_type' => 'commerce_store',
+      '#multiple' => TRUE,
+    ];
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
@@ -75,6 +83,7 @@ class GiftcardGenerateForm extends FormBase {
     $giftcard_values = [
       'type' => $form_state->getValue(['type']),
       'balance' => $form_state->getValue('balance'),
+      'stores' => $form_state->getValue('stores'),
     ];
 
     $batch_builder = (new BatchBuilder())

@@ -10,7 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides an inline form for redeeming a giftcard.
+ * Provides an inline form for redeeming a gift card.
  *
  * @CommerceInlineForm(
  *   id = "commerce_giftcard_redemption",
@@ -111,7 +111,7 @@ class GiftcardRedemption extends InlineFormBase {
     ];
     $inline_form['apply'] = [
       '#type' => 'submit',
-      '#value' => t('Apply giftcard'),
+      '#value' => t('Apply gift card'),
       '#name' => 'apply_giftcard',
       '#limit_validation_errors' => [
         $inline_form['#parents'],
@@ -126,7 +126,7 @@ class GiftcardRedemption extends InlineFormBase {
     ];
     $max_giftcards = $this->configuration['max_giftcards'];
     if ($max_giftcards && count($giftcards) >= $max_giftcards) {
-      // Don't allow additional giftcards to be added.
+      // Don't allow additional gift cards to be added.
       $inline_form['code']['#access'] = FALSE;
       $inline_form['apply']['#access'] = FALSE;
     }
@@ -137,7 +137,7 @@ class GiftcardRedemption extends InlineFormBase {
       ];
       $inline_form['giftcards'][$index]['remove_button'] = [
         '#type' => 'submit',
-        '#value' => t('Remove giftcard'),
+        '#value' => t('Remove gift card'),
         '#name' => 'remove_giftcard_' . $index,
         '#ajax' => [
           'callback' => [get_called_class(), 'ajaxRefreshForm'],
@@ -166,7 +166,7 @@ class GiftcardRedemption extends InlineFormBase {
   public function validateInlineForm(array &$inline_form, FormStateInterface $form_state) {
     parent::validateInlineForm($inline_form, $form_state);
 
-    // Runs if the 'Apply giftcard' button was clicked, or the main form
+    // Runs if the 'Apply gift card' button was clicked, or the main form
     // was submitted by the user clicking the primary submit button.
     $triggering_element = $form_state->getTriggeringElement();
     $button_type = isset($triggering_element['#button_type']) ? $triggering_element['#button_type'] : NULL;
@@ -179,14 +179,18 @@ class GiftcardRedemption extends InlineFormBase {
     $giftcard_code_path = implode('][', $giftcard_code_parents);
     if (empty($giftcard_code)) {
       if ($triggering_element['#name'] == 'apply_giftcard') {
-        $form_state->setErrorByName($giftcard_code_path, t('Please provide a giftcard code.'));
+        $form_state->setErrorByName($giftcard_code_path, t('Please provide a gift card code.'));
       }
       return;
     }
     $giftcard_storage = $this->entityTypeManager->getStorage('commerce_giftcard');
-    $giftcards = $giftcard_storage->loadByProperties(['code' => $giftcard_code]);
+    // Only consider active gift cards.
+    $giftcards = $giftcard_storage->loadByProperties([
+      'code' => $giftcard_code,
+      'status' => 1,
+    ]);
     if (empty($giftcards)) {
-      $form_state->setErrorByName($giftcard_code_path, t('The provided giftcard code is invalid.'));
+      $form_state->setErrorByName($giftcard_code_path, t('The provided gift card code is invalid.'));
       return;
     }
     /** @var \Drupal\commerce_giftcard\Entity\GiftcardInterface $giftcard */
@@ -203,22 +207,28 @@ class GiftcardRedemption extends InlineFormBase {
     }
     // @todo Support conditions for the order.
     if ($giftcard->getBalance()->isZero()) {
-      $form_state->setErrorByName($giftcard_code_path, t('The provided giftcard has no balance.'));
+      $form_state->setErrorByName($giftcard_code_path, t('The provided gift card has no balance.'));
       return;
     }
 
-    // Save the giftcard ID for applyGiftcard.
+    // Verify the store if set.
+    if ($giftcard->getStoreIds() && !\in_array($order->getStoreId(), $giftcard->getStoreIds())) {
+      $form_state->setErrorByName($giftcard_code_path, t('The provided gift card can not be used for this store.'));
+      return;
+    }
+
+    // Save the gift card ID for applyGiftcard.
     $inline_form['code']['#giftcard_id'] = $giftcard->id();
   }
 
   /**
-   * Submit callback for the "Apply giftcard" button.
+   * Submit callback for the "Apply gift card" button.
    */
   public static function applyGiftcard(array $form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     $parents = array_slice($triggering_element['#parents'], 0, -1);
     $inline_form = NestedArray::getValue($form, $parents);
-    // Clear the giftcard code input.
+    // Clear the gift card code input.
     $user_input = &$form_state->getUserInput();
     NestedArray::setValue($user_input, array_merge($parents, ['code']), '');
 
@@ -233,7 +243,7 @@ class GiftcardRedemption extends InlineFormBase {
   }
 
   /**
-   * Submit callback for the "Remove giftcard" button.
+   * Submit callback for the "Remove gift card" button.
    */
   public static function removeGiftcard(array $form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();

@@ -381,14 +381,14 @@ display:
           entity_type: commerce_giftcard_transaction
           entity_field: uid
           plugin_id: field
-        operations:
-          id: operations
+        comment:
+          id: comment
           table: commerce_giftcard_transaction
-          field: operations
+          field: comment
           relationship: none
           group_type: group
           admin_label: ''
-          label: Operations
+          label: Comment
           exclude: false
           alter:
             alter_text: false
@@ -429,10 +429,23 @@ display:
           hide_empty: false
           empty_zero: false
           hide_alter_empty: true
-          destination: false
-          entity_type: null
-          entity_field: null
-          plugin_id: entity_operations
+          click_sort_column: value
+          type: string
+          settings:
+            link_to_entity: false
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+          entity_type: commerce_giftcard_transaction
+          entity_field: comment
+          plugin_id: field
       filters: {  }
       sorts: {  }
       title: 'Gift card transactions'

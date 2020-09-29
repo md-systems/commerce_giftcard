@@ -24,6 +24,8 @@ class GiftcardViewsData extends CommerceEntityViewsData {
       ),
     );
 
+    $data['commerce_giftcard__stores']['stores_target_id']['field']['id'] = 'commerce_store';
+
     return $data;
   }
 

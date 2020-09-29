@@ -14,7 +14,7 @@ use Drupal\Core\Url;
 use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 
 /**
- * Tests the giftcard redemption checkout pane.
+ * Tests the gift card redemption checkout pane.
  *
  * @group commerce_giftcard
  */
@@ -35,7 +35,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
   protected $cartManager;
 
   /**
-   * The giftcard.
+   * The gift card.
    *
    * @var \Drupal\commerce_giftcard\Entity\GiftcardInterface
    */
@@ -77,7 +77,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $order_item->save();
     $this->cartManager->addOrderItem($this->cart, $order_item);
 
-    // Create a giftcard and giftcard type.
+    // Create a gift card and gift card type.
     $giftcard_type = GiftcardType::create([
       'id' => 'example',
       'label' => 'Example',
@@ -180,7 +180,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
   }
 
   /**
-   * Tests redeeming a giftcard using the giftcard redemption pane.
+   * Tests redeeming a gift card using the gift card redemption pane.
    */
   public function testGiftcardRedemption() {
     $checkout_url = Url::fromRoute('commerce_checkout.form', [
@@ -195,17 +195,17 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$999.00');
 
     // Confirm that validation errors set by the form element are visible.
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->pageTextContains('Please provide a giftcard code');
+    $this->assertSession()->pageTextContains('Please provide a gift card code');
 
-    // Valid giftcard.
+    // Valid gift card.
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldNotExists('Giftcard code');
-    $this->assertSession()->buttonNotExists('Apply giftcard');
+    $this->assertSession()->buttonNotExists('Apply gift card');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Giftcard');
     // Assert that the tax and subtotal remains unchanged but the total is
     // reduced.
@@ -215,23 +215,23 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$899.00');
 
     // Giftcard removal.
-    $this->getSession()->getPage()->pressButton('Remove giftcard');
+    $this->getSession()->getPage()->pressButton('Remove gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextNotContains($this->giftcard->getCode());
     $this->assertSession()->fieldExists('Giftcard code');
-    $this->assertSession()->buttonExists('Apply giftcard');
+    $this->assertSession()->buttonExists('Apply gift card');
     $this->assertSession()->pageTextNotContains('-$100.00');
     $this->assertSession()->elementNotExists('css', '.order-total-line__adjustment--commerce-giftcard');
     $this->assertSession()->pageTextContains('$999');
 
     // Invalid gift card code.
     $this->getSession()->getPage()->fillField('Giftcard code', 'XYZ');
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->pageTextContains('The provided giftcard code is invalid.');
+    $this->assertSession()->pageTextContains('The provided gift card code is invalid.');
     $this->assertSession()->fieldExists('Giftcard code');
 
-    // A giftcard with no balance.
+    // A gift card with no balance.
     $giftcard2 = $this->createEntity('commerce_giftcard', [
       'code' => 'DEF',
       'type' => 'example',
@@ -241,10 +241,39 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $giftcard2->save();
 
     $this->getSession()->getPage()->fillField('Giftcard code', $giftcard2->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->pageTextContains('The provided giftcard has no balance.');
+    $this->assertSession()->pageTextContains('The provided gift card has no balance.');
     $this->assertSession()->fieldExists('Giftcard code');
+
+    // A giftcard for the wrong store.
+    $store2 = $this->createStore();
+    $giftcard3 = $this->createEntity('commerce_giftcard', [
+      'code' => 'XYZ',
+      'type' => 'example',
+      'balance' => new Price('50.00', 'USD'),
+      'status' => TRUE,
+      'stores' => [$store2->id()],
+    ]);
+    $giftcard3->save();
+    $this->getSession()->getPage()->fillField('Giftcard code', $giftcard3->getCode());
+    $this->getSession()->getPage()->pressButton('Apply gift card');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->saveHtmlOutput();
+    $this->assertSession()->pageTextContains('The provided gift card can not be used for this store.');
+
+    // A disabled giftcard.
+    $giftcard4 = $this->createEntity('commerce_giftcard', [
+      'code' => 'CBA',
+      'type' => 'example',
+      'balance' => new Price('50.00', 'USD'),
+      'status' => FALSE,
+    ]);
+    $giftcard4->save();
+    $this->getSession()->getPage()->fillField('Giftcard code', $giftcard4->getCode());
+    $this->getSession()->getPage()->pressButton('Apply gift card');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('The provided gift card code is invalid.');
 
     // Confirm that the order summary is refreshed when outside of the sidebar.
     $checkout_flow = CheckoutFlow::load('default');
@@ -253,19 +282,23 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $checkout_flow->set('configuration', $configuration);
     $checkout_flow->save();
 
+    // Assign the giftcard to the first store to test a matching store.
+    $this->giftcard->setStores([$this->store]);
+    $this->giftcard->save();
+
     $this->drupalGet($checkout_url);
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldNotExists('Giftcard code');
-    $this->assertSession()->buttonNotExists('Apply giftcard');
+    $this->assertSession()->buttonNotExists('Apply gift card');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Giftcard');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
   }
 
   /**
-   * Tests redeeming giftcard on the cart form, with multiple giftcards allowed.
+   * Tests redeeming gift card on the cart form, with multiple gift cards allowed.
    */
   public function testMultipleGiftcardRedemption() {
     $config = \Drupal::configFactory()->getEditable('commerce_checkout.commerce_checkout_flow.default');
@@ -274,7 +307,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
 
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id()]));
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldExists('Giftcard code');
@@ -282,7 +315,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$899.00');
 
-    // Create and use a second giftcard.
+    // Create and use a second gift card.
     $giftcard2 = $this->createEntity('commerce_giftcard', [
       'code' => 'DEF',
       'type' => 'example',
@@ -292,11 +325,11 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $giftcard2->save();
 
     $this->getSession()->getPage()->fillField('Giftcard code', $giftcard2->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
 
-    // Both giftcards are applied now to the total, the nth index includes
-    // all order line items, so the giftcards are 3 and 4.
+    // Both gift cards are applied now to the total, the nth index includes
+    // all order line items, so the gift cards are 3 and 4.
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-label', 'Giftcard');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-value', '-$100.00');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(4) .order-total-line-label', 'Giftcard');
@@ -305,8 +338,8 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
 
     $this->assertSession()->pageTextContains($giftcard2->getCode());
 
-    // Remove the first giftcard, asser the updated total.
-    $this->getSession()->getPage()->pressButton('Remove giftcard');
+    // Remove the first gift card, asser the updated total.
+    $this->getSession()->getPage()->pressButton('Remove gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$150.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$849.00');
@@ -319,13 +352,13 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id()]));
 
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$899.00');
 
-    // Ensure that the payment method ajax works with the giftcard ajax.
+    // Ensure that the payment method ajax works with the gift card ajax.
     $radio_button = $this->getSession()->getPage()->findField('Visa ending in 9999');
     $radio_button->click();
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -347,7 +380,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertEquals(new Price('899.00', 'USD'), $this->cart->getTotalPaid());
     $this->assertCount(1, Payment::loadMultiple());
 
-    // Assert the updated giftcard and created transaction.
+    // Assert the updated gift card and created transaction.
     $this->giftcard = $this->reloadEntity($this->giftcard);
     $this->assertEquals(new Price('0.00', 'USD'), $this->giftcard->getBalance());
     $transactions = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadByProperties(['giftcard' => $this->giftcard->id()]);
@@ -358,7 +391,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
   }
 
   /**
-   * Tests checkout fully paid by giftcard.
+   * Tests checkout fully paid by gift card.
    */
   public function testCheckoutOnlyGiftcard() {
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id()]));
@@ -367,7 +400,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->giftcard->save();
 
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
-    $this->getSession()->getPage()->pressButton('Apply giftcard');
+    $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$999.00');
@@ -400,7 +433,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertEquals(new Price('0.00', 'USD'), $this->cart->getTotalPaid());
     $this->assertCount(0, Payment::loadMultiple());
 
-    // Assert the updated giftcard and created transaction.
+    // Assert the updated gift card and created transaction.
     $this->giftcard = $this->reloadEntity($this->giftcard);
     $this->assertEquals(new Price('4001.00', 'USD'), $this->giftcard->getBalance());
     $transactions = \Drupal::entityTypeManager()->getStorage('commerce_giftcard_transaction')->loadByProperties(['giftcard' => $this->giftcard->id()]);
@@ -411,7 +444,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
   }
 
   /**
-   * Tests checkout using the main submit button instead of 'Apply giftcard'.
+   * Tests checkout using the main submit button instead of 'Apply gift card'.
    */
   public function testCheckoutWithMainSubmit() {
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id()]));
@@ -433,7 +466,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
   }
 
   /**
-   * Tests that adding/removing giftcards does not submit other panes.
+   * Tests that adding/removing gift cards does not submit other panes.
    */
   public function testCheckoutSubmit() {
     // Start checkout, and enter billing information.
@@ -458,14 +491,14 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->getSession()->getPage()->fillField($address_prefix . '[given_name]', 'John');
     $this->getSession()->getPage()->fillField($address_prefix . '[family_name]', 'Smith');
 
-    // Add a giftcard.
+    // Add a gift card.
     $page = $this->getSession()->getPage();
     $page->fillField('Giftcard code', $this->giftcard->getCode());
-    $page->pressButton('Apply giftcard');
+    $page->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldNotExists('Giftcard code');
-    $this->assertSession()->buttonNotExists('Apply giftcard');
+    $this->assertSession()->buttonNotExists('Apply gift card');
 
     // Refresh the page and ensure the billing information hasn't been modified.
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id(), 'step' => 'order_information']));

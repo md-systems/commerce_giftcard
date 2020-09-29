@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_giftcard\Entity;
 
+use Drupal\commerce\Entity\CommerceContentEntityBase;
 use Drupal\commerce\EntityOwnerTrait;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -63,7 +63,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   field_ui_base_route = "entity.commerce_giftcard_type.edit_form"
  * )
  */
-class Giftcard extends ContentEntityBase implements GiftcardInterface {
+class Giftcard extends CommerceContentEntityBase implements GiftcardInterface {
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
@@ -133,6 +133,40 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
   /**
    * {@inheritdoc}
    */
+  public function getStores() {
+    return $this->getTranslatedReferencedEntities('stores');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setStores(array $stores) {
+    $this->set('stores', $stores);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getStoreIds() {
+    $store_ids = [];
+    foreach ($this->get('stores') as $store_item) {
+      $store_ids[] = $store_item->target_id;
+    }
+    return $store_ids;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setStoreIds(array $store_ids) {
+    $this->set('stores', $store_ids);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
 
     $fields = parent::baseFieldDefinitions($entity_type);
@@ -150,7 +184,7 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
         'settings' => [
           'display_label' => FALSE,
         ],
-        'weight' => 10,
+        'weight' => 30,
       ])
       ->setDisplayConfigurable('form', TRUE);
 
@@ -199,6 +233,19 @@ class Giftcard extends ContentEntityBase implements GiftcardInterface {
         'weight' => 0,
       ])
       ->setDisplayConfigurable('form', TRUE);
+
+    $fields['stores'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Stores'))
+      ->setDescription(t('Limits the gift card to the selected stores'))
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+      ->setSetting('target_type', 'commerce_store')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('form', [
+        'type' => 'commerce_entity_select',
+        'weight' => 20,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
   }

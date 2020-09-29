@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the commerce gift card entity class.
@@ -27,7 +28,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     "list_builder" = "Drupal\commerce_giftcard\GiftcardTransactionListBuilder",
  *     "access" = "Drupal\commerce_giftcard\GiftcardTransactionAccessControlHandler",
  *     "storage_schema" = "Drupal\commerce_giftcard\GiftcardTransactionStorageSchema",
- *     "views_data" = "Drupal\commerce\CommerceEntityViewsData",
+ *     "views_data" = "Drupal\commerce_giftcard\GiftcardTransactionViewsData",
  *     "form" = {
  *       "add" = "Drupal\commerce_giftcard\Form\GiftcardTransactionForm",
  *     },
@@ -102,6 +103,31 @@ class GiftcardTransaction extends ContentEntityBase implements GiftcardTransacti
   /**
    * {@inheritdoc}
    */
+  public function getComment() {
+    $text = $this->get('comment')->value;
+    if ($text) {
+      if ($this->get('variables')->first() && $this->get('variables')->first()->toArray()) {
+        return new TranslatableMarkup($text, $this->get('variables')->first()->toArray());
+      }
+      else {
+        return new TranslatableMarkup($text);
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getReferencedEntity() {
+    if ($this->get('reference_type')->value && $this->get('reference_id')->value && $this->entityTypeManager()->hasDefinition($this->get('reference_type')->value)) {
+      return $this->entityTypeManager()->getStorage($this->get('reference_type')->value)->load($this->get('reference_id')->value);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
 
     $fields = parent::baseFieldDefinitions($entity_type);
@@ -152,6 +178,23 @@ class GiftcardTransaction extends ContentEntityBase implements GiftcardTransacti
         'weight' => 0,
       ])
       ->setDisplayConfigurable('form', TRUE);
+
+    $fields['comment'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Comment'));
+    $fields['variables'] = BaseFieldDefinition::create('map')
+      ->setLabel(t('Variables'));
+
+    $fields['reference_type'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Parent type'))
+      ->setDescription(t('The entity parent type to which this entity is referenced.'))
+      ->setSetting('is_ascii', TRUE)
+      ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH);
+
+    $fields['reference_id'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Parent ID'))
+      ->setDescription(t('The ID of the parent entity of which this entity is referenced.'))
+      ->setSetting('is_ascii', TRUE)
+      ->setRevisionable(TRUE);
 
     return $fields;
   }

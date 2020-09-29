@@ -84,6 +84,7 @@ class GiftcardTransactionListBuilder extends EntityListBuilder {
     $header['created'] = $this->t('Created');
     $header['giftcard'] = $this->t('Giftcard');
     $header['amount'] = $this->t('Amount');
+    $header['comment'] = $this->t('Comment');
     $header['uid'] = $this->t('Owner');
     return $header + parent::buildHeader();
   }
@@ -95,6 +96,7 @@ class GiftcardTransactionListBuilder extends EntityListBuilder {
     $row['created'] = $this->dateFormatter->format($entity->getCreatedTime(), 'short');
     $row['giftcard'] = $entity->get('giftcard')->entity->label();
     $row['amount']['data'] = $entity->get('amount')->view(['label' => 'hidden']);
+    $row['amount'] = $entity->getComment();
     $row['uid']['data'] = $entity->getOwnerId() ? [
       '#theme' => 'username',
       '#account' => $entity->getOwner(),

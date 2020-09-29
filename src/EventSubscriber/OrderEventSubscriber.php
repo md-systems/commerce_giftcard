@@ -5,6 +5,8 @@ namespace Drupal\commerce_giftcard\EventSubscriber;
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
 use Drupal\commerce_giftcard\GiftcardCodeGenerator;
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_price\Price;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\state_machine\Event\WorkflowTransitionEvent;
@@ -104,15 +106,32 @@ class OrderEventSubscriber implements EventSubscriberInterface {
         $codes = $this->codeGenerator->generateCodes($purchased_entity->get('commerce_giftcard_type')->entity, $item->getQuantity());
 
         for ($i = 0; $i < $item->getQuantity(); $i++) {
-          // @todo Add a connection between order/line item/variation and
-          //   created giftcard to be able to disable if the order is canceled.
+          // Create a giftcard and then add the balance as a transaction to
+          // store the reference to this order.
+
+          $amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
           $giftcard = $this->entityTypeManager->getStorage('commerce_giftcard')->create([
             'type' => $purchased_entity->get('commerce_giftcard_type')->target_id,
             'code' => $codes[$i],
-            'balance' => $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice(),
+            'balance' => new Price(0, $amount->getCurrencyCode()),
             'uid' => $order->getCustomerId(),
+            // Set the stores to the stores that the purchasable entity can be
+            // bought not just the one from the order.
+            // @todo Make this configurable, add an event for the giftcard and
+            //   transaction being created?
+            'stores' => $purchased_entity->getStores(),
           ]);
           $giftcard->save();
+
+          $transaction = $this->entityTypeManager->getStorage('commerce_giftcard_transaction')->create([
+            'giftcard' => $giftcard->id(),
+            'amount' => $amount,
+            'reference_type' => $item->getEntityTypeId(),
+            'reference_id' => $item->id(),
+            'comment' => 'Bought @product.',
+            'variables' => ['@product' => $purchased_entity->label()]
+          ]);
+          $transaction->save();
         }
       }
     }
