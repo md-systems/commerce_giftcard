@@ -5,6 +5,7 @@
     "homepage": "http://drupal.org/project/commerce_giftcard",
     "license": "GPL-2.0+",
     "require": {
-        "drupal/commerce": "^8.8 || ^9"
+        "drupal/core": "^8.8 || ^9",
+        "drupal/commerce": "^2"
     }
 }
