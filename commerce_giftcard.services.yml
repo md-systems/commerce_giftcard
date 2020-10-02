@@ -3,7 +3,9 @@ services:
     class: Drupal\commerce_giftcard\GiftcardOrderProcessor
     arguments: [ '@entity_type.manager']
     tags:
-      - { name: commerce_order.order_processor, priority: -100, adjustment_type: commerce_giftcard }
+    # Very low priority to ensure that giftcards are applied last and
+    # include other adjustments.
+      - { name: commerce_order.order_processor, priority: -1000, adjustment_type: commerce_giftcard }
   commerce_giftcard.code_generator:
     class: Drupal\commerce_giftcard\GiftcardCodeGenerator
     arguments: ['@database']
