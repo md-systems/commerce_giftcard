@@ -43,4 +43,22 @@ interface GiftcardTypeInterface extends ConfigEntityInterface {
    */
   public function setGenerateSetting($name, $value);
 
+  /**
+   * Returns the configured display label.
+   *
+   * @return string
+   *   The display label.
+   */
+  public function getDisplayLabel();
+
+  /**
+   * Sets the display label.
+   *
+   * @param string $display_label
+   *   The new display label.
+   *
+   * @return $this
+   */
+  public function setDisplayLabel($display_label);
+
 }

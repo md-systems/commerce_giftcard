@@ -8,6 +8,9 @@ commerce_giftcard.giftcard_type.*:
     label:
       type: label
       label: 'Label'
+    display_label:
+      type: label
+      label: 'Display label'
     generate:
       type: mapping
       label: Generate code settings

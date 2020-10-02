@@ -210,7 +210,8 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldNotExists('Giftcard code');
     $this->assertSession()->buttonNotExists('Apply gift card');
-    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Giftcard');
+    $this->saveHtmlOutput();
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Gift card');
     // Assert that the tax and subtotal remains unchanged but the total is
     // reduced.
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
@@ -305,6 +306,11 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->giftcard->setStores([$this->store]);
     $this->giftcard->save();
 
+    // Test customized giftcard type display label.
+    $giftcard_type = GiftcardType::load('example');
+    $giftcard_type->setDisplayLabel('Foo [commerce_giftcard:code:value]');
+    $giftcard_type->save();
+
     $this->drupalGet($checkout_url);
     $this->getSession()->getPage()->fillField('Giftcard code', $this->giftcard->getCode());
     $this->getSession()->getPage()->pressButton('Apply gift card');
@@ -312,7 +318,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldNotExists('Giftcard code');
     $this->assertSession()->buttonNotExists('Apply gift card');
-    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Giftcard');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Foo ABC');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
   }
 
@@ -330,7 +336,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains($this->giftcard->getCode());
     $this->assertSession()->fieldExists('Giftcard code');
-    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Giftcard');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-label', 'Gift card');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard .order-total-line-value', '-$100.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$899.00');
 
@@ -349,9 +355,9 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
 
     // Both gift cards are applied now to the total, the nth index includes
     // all order line items, so the gift cards are 3 and 4.
-    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-label', 'Giftcard');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-label', 'Gift card');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(3) .order-total-line-value', '-$100.00');
-    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(4) .order-total-line-label', 'Giftcard');
+    $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(4) .order-total-line-label', 'Gift card');
     $this->assertSession()->elementContains('css', '.order-total-line__adjustment--commerce-giftcard:nth-of-type(4) .order-total-line-value', '-$150.00');
     $this->assertSession()->elementContains('css', '.order-total-line__total', '$749.00');
 

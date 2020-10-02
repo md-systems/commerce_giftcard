@@ -48,6 +48,18 @@ class GiftcardTypeForm extends BundleEntityFormBase {
       '#description' => $this->t('A unique machine-readable name for this gift card type. It must only contain lowercase letters, numbers, and underscores.'),
     ];
 
+    $form['display_label'] = [
+      '#title' => $this->t('Display label'),
+      '#type' => 'textfield',
+      '#default_value' => $entity_type->getDisplayLabel(),
+      '#description' => $this->t('The display label is shown as the adjustment label during checkout. Defaults to "Giftcard". Tokens are supported, use [commerce_giftcard:code:value] to show the giftcard code.'),
+    ];
+
+    $form['token_tree'] = [
+      '#theme' => 'token_tree_link',
+      '#token_types' => ['commerce_giftcard'],
+    ];
+
     $form['generate'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Code pattern'),

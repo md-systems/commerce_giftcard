@@ -50,6 +50,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
  *   config_export = {
  *     "id",
  *     "label",
+ *     "display_label",
  *     "uuid",
  *     "generate",
  *   }
@@ -70,6 +71,13 @@ class GiftcardType extends ConfigEntityBundleBase implements GiftcardTypeInterfa
    * @var string
    */
   protected $label;
+
+  /**
+   * The the display label for the giftcard.
+   *
+   * @var string
+   */
+  protected $display_label;
 
   /**
    * Generate code settings.
@@ -110,5 +118,24 @@ class GiftcardType extends ConfigEntityBundleBase implements GiftcardTypeInterfa
   public function setGenerateSetting($name, $value) {
     $this->generate[$name] = $value;
   }
+
+  /**
+   * @return string
+   */
+  public function getDisplayLabel() {
+    return $this->display_label;
+  }
+
+  /**
+   * @param string $display_label
+   *
+   * @return $this
+   */
+  public function setDisplayLabel($display_label) {
+    $this->display_label = $display_label;
+    return $this;
+  }
+
+
 
 }

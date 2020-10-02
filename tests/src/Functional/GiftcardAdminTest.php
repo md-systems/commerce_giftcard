@@ -54,6 +54,7 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     $this->clickLink('Add a new gift card type.');
     $page = $this->getSession()->getPage();
     $page->fillField('Label', 'Example');
+    $page->fillField('Display label', 'Giftcard [commerce_giftcard:code:value]');
     $page->fillField('id', 'example');
     $page->pressButton('Save');
     $this->assertSession()->pageTextContains('The gift card type Example has been added.');

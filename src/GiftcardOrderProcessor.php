@@ -6,6 +6,7 @@ use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\OrderProcessorInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Utility\Token;
 
 /**
  * Applies promotions to orders during the order refresh process.
@@ -13,6 +14,21 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 class GiftcardOrderProcessor implements OrderProcessorInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * @var \Drupal\Core\Utility\Token
+   */
+  protected $token;
+
+  /**
+   * GiftcardOrderProcessor constructor.
+   *
+   * @param \Drupal\Core\Utility\Token $token
+   *   The token service.
+   */
+  public function __construct(Token $token) {
+    $this->token = $token;
+  }
 
   /**
    * {@inheritdoc}
@@ -43,11 +59,16 @@ class GiftcardOrderProcessor implements OrderProcessorInterface {
         $amount = $order_total;
       }
 
-      // @todo Add this to order items instead?
+      if ($giftcard->get('type')->entity->getDisplayLabel()) {
+        $label = $this->token->replace($giftcard->get('type')->entity->getDisplayLabel(), ['commerce_giftcard' => $giftcard]);
+      }
+      else {
+        $label = $this->t('Gift card');
+      }
+
       $order->addAdjustment(new Adjustment([
         'type' => 'commerce_giftcard',
-        // @todo show giftcard code? Might be too long.
-        'label' => $this->t('Giftcard'),
+        'label' => $label,
         'amount' => $amount->multiply('-1'),
         'source_id' => $giftcard->id(),
       ]));

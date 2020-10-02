@@ -1,7 +1,7 @@
 services:
   commerce_giftcard.giftcard_order_processor:
     class: Drupal\commerce_giftcard\GiftcardOrderProcessor
-    arguments: [ '@entity_type.manager']
+    arguments: [ '@token']
     tags:
     # Very low priority to ensure that giftcards are applied last and
     # include other adjustments.
