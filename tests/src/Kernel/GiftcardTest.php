@@ -43,6 +43,20 @@ class GiftcardTest extends CommerceKernelTestBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function installConfig($modules) {
+    // The parent class installs the commerce_store config by default,
+    // that ends up also installing the giftcard admin view which uses a
+    // currency formatter that in turn requires the default country of the site
+    // to be set, so import the system.module configuration first.
+    if ($modules == ['commerce_store']) {
+      parent::installConfig(['system']);
+    }
+    parent::installConfig($modules);
+  }
+
+  /**
    * Tests creating giftcards.
    */
   public function testSaving() {
