@@ -207,13 +207,22 @@ class GiftcardRedemption extends InlineFormBase {
     }
     // @todo Support conditions for the order.
     if ($giftcard->getBalance()->isZero()) {
-      $form_state->setErrorByName($giftcard_code_path, t('The provided gift card has no balance.'));
+      $form_state->setErrorByName($giftcard_code_path, $this->t('The provided gift card has no balance.'));
+      return;
+    }
+
+    // Verify currency.
+    if ($giftcard->getBalance()->getCurrencyCode() !== $order->getTotalPrice()->getCurrencyCode()) {
+      $form_state->setErrorByName($giftcard_code_path, $this->t('The order currency (%order_currency) does not match the giftcard currency (%giftcard_currency).', [
+        '%order_currency' => $order->getTotalPrice()->getCurrencyCode(),
+        '%giftcard_currency' => $giftcard->getBalance()->getCurrencyCode(),
+      ]));
       return;
     }
 
     // Verify the store if set.
     if ($giftcard->getStoreIds() && !\in_array($order->getStoreId(), $giftcard->getStoreIds())) {
-      $form_state->setErrorByName($giftcard_code_path, t('The provided gift card can not be used for this store.'));
+      $form_state->setErrorByName($giftcard_code_path, $this->t('The provided gift card can not be used for this store.'));
       return;
     }
 

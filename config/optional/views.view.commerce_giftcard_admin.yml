@@ -593,10 +593,10 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-          hide_single_store: 1
+          hide_single_store: true
           entity_type: commerce_giftcard
           entity_field: stores
-          plugin_id: field
+          plugin_id: commerce_store
         created:
           id: created
           table: commerce_giftcard

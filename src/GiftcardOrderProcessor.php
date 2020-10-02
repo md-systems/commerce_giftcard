@@ -29,6 +29,12 @@ class GiftcardOrderProcessor implements OrderProcessorInterface {
         break;
       }
 
+      // Ignore giftcards with the wrong currency, validation should prevent
+      // this from happening.
+      if ($giftcard->getBalance()->getCurrencyCode() !== $order_total->getCurrencyCode()) {
+        continue;
+      }
+
       // Decide how much of the balance is added as an adjustment.
       if ($order_total->greaterThan($giftcard->getBalance())) {
         $amount = $giftcard->getBalance();

@@ -179,6 +179,7 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
     $order = $this->createEntity('commerce_order', [
       'type' => 'default',
+      'order_number' => '1',
       'store_id' => $this->store->id(),
       'mail' => $this->loggedInUser->getEmail(),
       'state' => 'draft',
@@ -217,7 +218,22 @@ class GiftcardAdminTest extends CommerceBrowserTestBase {
     ]);
     $giftcard2->save();
 
+    $giftcard3 = Giftcard::create([
+      'type' => 'example',
+      'code' => 'CH',
+      'balance' => new Price(300, 'CHF'),
+    ]);
+    $giftcard3->save();
+
+    $order->set('commerce_giftcards', [$giftcard, $giftcard2, $giftcard3]);
+    $violations = $order->validate();
+    $this->assertEquals(1, count($violations));
+    $this->assertEquals('commerce_giftcards.2', $violations[0]->getPropertyPath());
+    $this->assertEquals('The order currency (<em class="placeholder">USD</em>) does not match the giftcard currency (<em class="placeholder">CHF</em>).', $violations[0]->getMessage());
+
     $order->set('commerce_giftcards', [$giftcard, $giftcard2]);
+    $violations = $order->validate();
+    $this->assertEquals(0, count($violations));
     $order->save();
 
     // Refund is only visible after placing the order.

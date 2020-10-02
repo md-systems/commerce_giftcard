@@ -21,8 +21,7 @@ function commerce_giftcard_entity_base_field_info(EntityTypeInterface $entity_ty
       ->setSetting('target_type', 'commerce_giftcard')
       ->setSetting('handler', 'default')
       ->setTranslatable(FALSE)
-      // @todo port validation constraint.
-      //->addConstraint('CouponValid')
+      ->addConstraint('GiftcardOrderCurrency')
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
         'weight' => 5,

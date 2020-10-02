@@ -183,6 +183,10 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
    * Tests redeeming a gift card using the gift card redemption pane.
    */
   public function testGiftcardRedemption() {
+
+    $currency_importer = $this->container->get('commerce_price.currency_importer');
+    $currency_importer->import('CHF');
+
     $checkout_url = Url::fromRoute('commerce_checkout.form', [
       'commerce_order' => $this->cart->id(),
     ]);
@@ -261,6 +265,7 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->saveHtmlOutput();
     $this->assertSession()->pageTextContains('The provided gift card can not be used for this store.');
+    $this->assertSession()->fieldExists('Giftcard code');
 
     // A disabled giftcard.
     $giftcard4 = $this->createEntity('commerce_giftcard', [
@@ -274,6 +279,20 @@ class GiftcardRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->getSession()->getPage()->pressButton('Apply gift card');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('The provided gift card code is invalid.');
+    $this->assertSession()->fieldExists('Giftcard code');
+
+    // A CHF giftcard.
+    $giftcard5 = $this->createEntity('commerce_giftcard', [
+      'code' => 'CH',
+      'type' => 'example',
+      'balance' => new Price('50.00', 'CHF'),
+    ]);
+    $giftcard5->save();
+    $this->getSession()->getPage()->fillField('Giftcard code', $giftcard5->getCode());
+    $this->getSession()->getPage()->pressButton('Apply gift card');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains('The order currency (USD) does not match the giftcard currency (CHF).');
+    $this->assertSession()->fieldExists('Giftcard code');
 
     // Confirm that the order summary is refreshed when outside of the sidebar.
     $checkout_flow = CheckoutFlow::load('default');

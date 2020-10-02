@@ -5,11 +5,11 @@ namespace Drupal\commerce_giftcard\Plugin\Validation\Constraint;
 use Symfony\Component\Validator\Constraint;
 
 /**
- * Ensures gift card code uniqueness.
+ * Validates gift card code transactions.
  *
  * @Constraint(
  *   id = "GiftcardTransactionValidAmount",
- *   label = @Translation("Gift transaction amount", context = "Validation")
+ *   label = @Translation("Gift card transaction amount", context = "Validation")
  * )
  */
 class GiftcardTransactionValidAmount extends Constraint {
