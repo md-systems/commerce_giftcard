@@ -3,11 +3,13 @@
 namespace Drupal\commerce_giftcard\EventSubscriber;
 
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
+use Drupal\commerce_giftcard\Event\GiftcardAmountCalculateEvent;
 use Drupal\commerce_giftcard\GiftcardCodeGenerator;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\state_machine\Event\WorkflowTransitionEvent;
 
@@ -31,14 +33,26 @@ class OrderEventSubscriber implements EventSubscriberInterface {
   protected $codeGenerator;
 
   /**
+   * Event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * OrderEventSubscriber constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *  The entity type manager.
+   *   The entity type manager.
+   * @param \Drupal\commerce_giftcard\GiftcardCodeGenerator $code_generator
+   *   Code generator.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   Event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, GiftcardCodeGenerator $code_generator) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, GiftcardCodeGenerator $code_generator, EventDispatcherInterface $eventDispatcher) {
     $this->entityTypeManager = $entity_type_manager;
     $this->codeGenerator = $code_generator;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -101,19 +115,28 @@ class OrderEventSubscriber implements EventSubscriberInterface {
 
     foreach ($items as $item) {
       $purchased_entity = $item->getPurchasedEntity();
-      if ($purchased_entity && $purchased_entity->hasField('commerce_giftcard_amount') && $purchased_entity->hasField('commerce_giftcard_type') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
+      if (!$purchased_entity) {
+        return;
+      }
+      $giftcard_amount = NULL;
+      if ($purchased_entity->hasField('commerce_giftcard_amount') && $purchased_entity->hasField('commerce_giftcard_type') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
+        $giftcard_amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
+      }
 
+      $event = new GiftcardAmountCalculateEvent($giftcard_amount);
+      $this->eventDispatcher->dispatch(GiftcardEvents::GIFTCARD_AMOUNT_CALCULATE, $event)
+
+      if ($event->getAmount() instanceof Price) {
+        $giftcard_amount = $event->getAmount();
         $codes = $this->codeGenerator->generateCodes($purchased_entity->get('commerce_giftcard_type')->entity, $item->getQuantity());
 
         for ($i = 0; $i < $item->getQuantity(); $i++) {
           // Create a giftcard and then add the balance as a transaction to
           // store the reference to this order.
-
-          $amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
           $giftcard = $this->entityTypeManager->getStorage('commerce_giftcard')->create([
             'type' => $purchased_entity->get('commerce_giftcard_type')->target_id,
             'code' => $codes[$i],
-            'balance' => new Price(0, $amount->getCurrencyCode()),
+            'balance' => new Price(0, $giftcard_amount->getCurrencyCode()),
             'uid' => $order->getCustomerId(),
             // Set the stores to the stores that the purchasable entity can be
             // bought not just the one from the order.
@@ -125,7 +148,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
 
           $transaction = $this->entityTypeManager->getStorage('commerce_giftcard_transaction')->create([
             'giftcard' => $giftcard->id(),
-            'amount' => $amount,
+            'amount' => $giftcard_amount,
             'reference_type' => $item->getEntityTypeId(),
             'reference_id' => $item->id(),
             'comment' => 'Bought @product.',
