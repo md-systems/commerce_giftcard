@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\commerce_promotion\FunctionalJavascript;
+namespace Drupal\Tests\commerce_giftcard\FunctionalJavascript;
 
 use Drupal\commerce_checkout\Entity\CheckoutFlow;
 use Drupal\commerce_giftcard\Entity\GiftcardType;

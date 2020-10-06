@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\Functional\commerce_giftcard;
+namespace Drupal\Tests\commerce_giftcard\Functional;
 
 use Drupal\commerce_giftcard\Entity\Giftcard;
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
