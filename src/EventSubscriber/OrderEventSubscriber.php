@@ -173,7 +173,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
       $giftcard_amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
     }
 
-    $event = new GiftcardAmountCalculateEvent($giftcard_amount);
+    $event = new GiftcardAmountCalculateEvent($item, $giftcard_amount);
     $this->eventDispatcher->dispatch(GiftcardEvents::GIFTCARD_AMOUNT_CALCULATE, $event);
     return $event->getAmount();
   }
