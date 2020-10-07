@@ -6,6 +6,7 @@ use Drupal\commerce_giftcard\Entity\GiftcardInterface;
 use Drupal\commerce_giftcard\Event\GiftcardAmountCalculateEvent;
 use Drupal\commerce_giftcard\GiftcardCodeGenerator;
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -118,46 +119,60 @@ class OrderEventSubscriber implements EventSubscriberInterface {
       if (!$purchased_entity) {
         return;
       }
-      $giftcard_amount = NULL;
-      if ($purchased_entity->hasField('commerce_giftcard_amount') && $purchased_entity->hasField('commerce_giftcard_type') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
-        $giftcard_amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
+      $giftcard_amount = $this->getAmountFromItem($item);
+      if (!$giftcard_amount instanceof Price) {
+        return;
       }
+      $codes = $this->codeGenerator->generateCodes($purchased_entity->get('commerce_giftcard_type')->entity, $item->getQuantity());
 
-      $event = new GiftcardAmountCalculateEvent($giftcard_amount);
-      $this->eventDispatcher->dispatch(GiftcardEvents::GIFTCARD_AMOUNT_CALCULATE, $event)
+      for ($i = 0; $i < $item->getQuantity(); $i++) {
+        // Create a giftcard and then add the balance as a transaction to
+        // store the reference to this order.
+        $giftcard = $this->entityTypeManager->getStorage('commerce_giftcard')->create([
+          'type' => $purchased_entity->get('commerce_giftcard_type')->target_id,
+          'code' => $codes[$i],
+          'balance' => new Price(0, $giftcard_amount->getCurrencyCode()),
+          'uid' => $order->getCustomerId(),
+          // Set the stores to the stores that the purchasable entity can be
+          // bought not just the one from the order.
+          // @todo Make this configurable, add an event for the giftcard and
+          //   transaction being created?
+          'stores' => $purchased_entity->getStores(),
+        ]);
+        $giftcard->save();
 
-      if ($event->getAmount() instanceof Price) {
-        $giftcard_amount = $event->getAmount();
-        $codes = $this->codeGenerator->generateCodes($purchased_entity->get('commerce_giftcard_type')->entity, $item->getQuantity());
-
-        for ($i = 0; $i < $item->getQuantity(); $i++) {
-          // Create a giftcard and then add the balance as a transaction to
-          // store the reference to this order.
-          $giftcard = $this->entityTypeManager->getStorage('commerce_giftcard')->create([
-            'type' => $purchased_entity->get('commerce_giftcard_type')->target_id,
-            'code' => $codes[$i],
-            'balance' => new Price(0, $giftcard_amount->getCurrencyCode()),
-            'uid' => $order->getCustomerId(),
-            // Set the stores to the stores that the purchasable entity can be
-            // bought not just the one from the order.
-            // @todo Make this configurable, add an event for the giftcard and
-            //   transaction being created?
-            'stores' => $purchased_entity->getStores(),
-          ]);
-          $giftcard->save();
-
-          $transaction = $this->entityTypeManager->getStorage('commerce_giftcard_transaction')->create([
-            'giftcard' => $giftcard->id(),
-            'amount' => $giftcard_amount,
-            'reference_type' => $item->getEntityTypeId(),
-            'reference_id' => $item->id(),
-            'comment' => 'Bought @product.',
-            'variables' => ['@product' => $purchased_entity->label()]
-          ]);
-          $transaction->save();
-        }
+        $transaction = $this->entityTypeManager->getStorage('commerce_giftcard_transaction')->create([
+          'giftcard' => $giftcard->id(),
+          'amount' => $giftcard_amount,
+          'reference_type' => $item->getEntityTypeId(),
+          'reference_id' => $item->id(),
+          'comment' => 'Bought @product.',
+          'variables' => ['@product' => $purchased_entity->label()],
+        ]);
+        $transaction->save();
       }
     }
+  }
+
+  /**
+   * Helper to get a giftcard amount from an order item.
+   *
+   * @param \Drupal\commerce_order\Entity\OrderItemInterface $item
+   *   Order item.
+   *
+   * @return \Drupal\commerce_price\Price|null
+   *   An amount in the form of a price, if applicable. Or null otherwise.
+   */
+  protected function getAmountFromItem(OrderItemInterface $item) {
+    $purchased_entity = $item->getPurchasedEntity();
+    $giftcard_amount = $item->getAdjustedUnitPrice();
+    if ($purchased_entity->hasField('commerce_giftcard_amount') && $purchased_entity->hasField('commerce_giftcard_type') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
+      $giftcard_amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
+    }
+
+    $event = new GiftcardAmountCalculateEvent($giftcard_amount);
+    $this->eventDispatcher->dispatch(GiftcardEvents::GIFTCARD_AMOUNT_CALCULATE, $event);
+    return $event->getAmount();
   }
 
 }
