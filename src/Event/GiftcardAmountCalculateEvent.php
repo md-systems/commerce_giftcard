@@ -52,7 +52,7 @@ class GiftcardAmountCalculateEvent extends Event {
   /**
    * Amount setter.
    */
-  public function setAmount(Price $amount) {
+  public function setAmount($amount) {
     $this->amount = $amount;
   }
 
