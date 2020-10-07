@@ -4,11 +4,11 @@ namespace Drupal\commerce_giftcard\EventSubscriber;
 
 use Drupal\commerce_giftcard\Entity\GiftcardInterface;
 use Drupal\commerce_giftcard\Event\GiftcardAmountCalculateEvent;
+use Drupal\commerce_giftcard\Event\GiftcardEvents;
 use Drupal\commerce_giftcard\GiftcardCodeGenerator;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_price\Price;
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -158,7 +158,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Helper to get a giftcard amount from an order item.
+   * Returns the giftcard amount from an order item.
    *
    * @param \Drupal\commerce_order\Entity\OrderItemInterface $item
    *   Order item.
@@ -169,7 +169,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
   protected function getAmountFromItem(OrderItemInterface $item) {
     $purchased_entity = $item->getPurchasedEntity();
     $giftcard_amount = $item->getAdjustedUnitPrice();
-    if ($purchased_entity->hasField('commerce_giftcard_amount') && $purchased_entity->hasField('commerce_giftcard_type') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
+    if ($purchased_entity->hasField('commerce_giftcard_amount') && !$purchased_entity->get('commerce_giftcard_amount')->isEmpty()) {
       $giftcard_amount = $purchased_entity->get('commerce_giftcard_amount')->first()->toPrice();
     }
 

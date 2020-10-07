@@ -1,9 +1,9 @@
 <?php
 
-namespace Drupal\commerce_giftcard\EventSubscriber;
+namespace Drupal\commerce_giftcard\Event;
 
 /**
- * Class GiftcardEvents.
+ * Gift card events.
  */
 final class GiftcardEvents {
 

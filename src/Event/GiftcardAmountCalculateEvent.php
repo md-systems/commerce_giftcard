@@ -3,10 +3,11 @@
 namespace Drupal\commerce_giftcard\Event;
 
 use Drupal\commerce_order\Entity\OrderItemInterface;
+use Drupal\commerce_price\Price;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
- * Class GiftcardAmountCalculateEvent.
+ * Gift card amount calculation event.
  */
 class GiftcardAmountCalculateEvent extends Event {
 
@@ -33,7 +34,7 @@ class GiftcardAmountCalculateEvent extends Event {
   }
 
   /**
-   * Order item getter.
+   * Returns the order item.
    *
    * @return \Drupal\commerce_order\Entity\OrderItemInterface
    *   The order item.
@@ -43,16 +44,22 @@ class GiftcardAmountCalculateEvent extends Event {
   }
 
   /**
-   * Get the amount.
+   * Returns the amount.
+   *
+   * @return \Drupal\commerce_price\Price|null
+   *   The gift card amount.
    */
   public function getAmount() {
     return $this->amount;
   }
 
   /**
-   * Amount setter.
+   * Set a new amount.
+   *
+   * @param \Drupal\commerce_price\Price|null $amount
+   *   The new price or NULL to not create a gift card.
    */
-  public function setAmount($amount) {
+  public function setAmount(Price $amount = NULL) {
     $this->amount = $amount;
   }
 
