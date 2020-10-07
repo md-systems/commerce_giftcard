@@ -22,6 +22,7 @@ class GiftcardPurchase extends EntityTraitBase {
   public function buildFieldDefinitions() {
     $fields = [];
     $fields['commerce_giftcard_amount'] = BundleFieldDefinition::create('commerce_price')
+      ->setDescription(t('If this field is left empty, the price of the product will be used as the giftcard amount'))
       ->setLabel(t('Giftcard amount'))
       ->setDisplayOptions('form', [
         'type' => 'commerce_price_default',
