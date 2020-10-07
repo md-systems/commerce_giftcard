@@ -119,6 +119,9 @@ class OrderEventSubscriber implements EventSubscriberInterface {
       if (!$purchased_entity) {
         return;
       }
+      if (!$purchased_entity->hasField('commerce_giftcard_type') || $purchased_entity->get('commerce_giftcard_type')->isEmpty()) {
+        return;
+      }
       $giftcard_amount = $this->getAmountFromItem($item);
       if (!$giftcard_amount instanceof Price) {
         return;
